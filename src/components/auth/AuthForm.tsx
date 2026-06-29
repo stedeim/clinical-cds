@@ -1,0 +1,91 @@
+"use client";
+
+import { useState, FormEvent } from "react";
+
+interface AuthFormProps {
+  mode: "login" | "signup";
+}
+
+export function AuthForm({ mode }: AuthFormProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [credential, setCredential] = useState("MD");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    const res = await fetch(mode === "login" ? "/api/auth/login" : "/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, fullName, credential }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setError(data.error ?? "Request failed.");
+      setLoading(false);
+      return;
+    }
+
+    setMessage(mode === "login" ? "Signed in." : "Account created.");
+    window.location.href = "/";
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      {mode === "signup" && (
+        <>
+          <Field label="Full name" value={fullName} onChange={setFullName} required />
+          <Field label="Credential" value={credential} onChange={setCredential} required />
+        </>
+      )}
+      <Field label="Email" type="email" value={email} onChange={setEmail} required />
+      <Field label="Password" type="password" value={password} onChange={setPassword} required />
+
+      {error && <p className="text-sm text-danger">{error}</p>}
+      {message && <p className="text-sm text-emerald-700">{message}</p>}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-md bg-clinical px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+      >
+        {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
+      </button>
+    </form>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-ink">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-clinical focus:outline-none"
+      />
+    </div>
+  );
+}
