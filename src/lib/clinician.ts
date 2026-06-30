@@ -86,6 +86,11 @@ export class AuthError extends Error {
 }
 
 export async function currentUserIdFromCookies(): Promise<string | undefined> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    // Stub mode: same synthetic identity getServerUser() returns, so the query
+    // path stays runnable (and verified) without any Supabase keys.
+    return "demo-clinician";
+  }
   try {
     const supabase = await createUserClientFromCookies();
     const {
