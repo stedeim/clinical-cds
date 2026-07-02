@@ -5,6 +5,8 @@ import { generateNote } from "@/lib/note/engine";
 import { checkDoses } from "@/lib/dosecheck/engine";
 import { surfaceCheatSheets } from "@/lib/cheatsheet/engine";
 import type { CheatSheet } from "@/lib/cheatsheet/library";
+import { surfaceRegionalPatterns } from "@/lib/regional/engine";
+import type { RegionalPattern } from "@/lib/regional/library";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 import { detectFramework } from "@/lib/geo";
 import { suggestFollowUps } from "@/lib/followup/suggest";
@@ -62,6 +64,35 @@ const T = {
 
 function sexInitial(sex?: string): string {
   return sex === "female" ? "F" : sex === "male" ? "M" : sex === "intersex" ? "I" : "";
+}
+
+// Regional prescribing-pattern card. Descriptive, cited, rank-based peer data
+// from PUBLIC datasets (CMS Part D, OpenPrescribing, PBS/CIHI) — what peers
+// commonly prescribe in this region, never what to prescribe. Percentages
+// arrive only when Pabaid's own opt-in network accumulates real data.
+function RegionalPatternCard({ pattern }: { pattern: RegionalPattern }) {
+  return (
+    <div style={{ background: T.card, borderRadius: 16, padding: "17px 18px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 11 }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${T.accent}` }} />
+        Regional patterns · {pattern.regionLabel}
+      </div>
+      <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>
+        {pattern.conditionLabel} — what peers commonly prescribe
+      </div>
+      <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
+        {pattern.bullets.map((b, i) => (
+          <li key={i}>{b}</li>
+        ))}
+      </ul>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+        <span style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
+          {pattern.source}
+        </span>
+        <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>descriptive — not a recommendation</span>
+      </div>
+    </div>
+  );
 }
 
 // Auto-surfaced guideline card (Moat 4's unprompted half). Content comes from
@@ -129,6 +160,10 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   // Geo-detected default guideline framework (edge country header, then
   // Accept-Language). Only the select's initial value — manual override stays.
   const defaultFramework = detectFramework(await headers());
+
+  // Regional prescribing patterns for the detected region + chart problems —
+  // cited public-dataset facts (see regional/library.ts); absent regions stay silent.
+  const regionalPatterns = surfaceRegionalPatterns(encounter.problems, defaultFramework);
 
   // Follow-up suggestions come from the visit's own text (deterministic parser
   // over the note spans + HPI — no LLM); the clinician confirms, edits, and
@@ -225,6 +260,9 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {cheatSheets.map((sheet) => (
               <CheatSheetCard key={sheet.id} sheet={sheet} />
+            ))}
+            {regionalPatterns.map((pattern) => (
+              <RegionalPatternCard key={pattern.id} pattern={pattern} />
             ))}
             <div>
               <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>

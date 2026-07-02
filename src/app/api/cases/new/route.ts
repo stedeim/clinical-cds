@@ -3,6 +3,8 @@ import { saveCase } from "@/lib/store";
 import { CaseIntakeSchema, caseFromIntake } from "@/lib/case-intake";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { recordPrescribingEvents } from "@/lib/regional/record";
+import { detectFramework } from "@/lib/geo";
 
 export const runtime = "nodejs";
 
@@ -44,6 +46,12 @@ export async function POST(req: Request) {
   try {
     const caseContext = caseFromIntake(parsed.data, user.id);
     const record = await saveCase(caseContext, user.id);
+
+    // Fire-and-forget: de-identified prescribing events for the regional
+    // peer-stats loop (no-op in stub mode; never blocks or fails the request).
+    const framework = detectFramework(req.headers);
+    void recordPrescribingEvents({ caseContext, framework }).catch(() => {});
+
     return NextResponse.json({ record }, { status: 201 });
   } catch (err) {
     console.error("[cases/new]", err);
