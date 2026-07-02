@@ -15,7 +15,7 @@ export interface ServerUser {
 export async function getServerUser(): Promise<ServerUser | null> {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
     // Stub mode: synthetic demo user.
-    return { id: "demo-clinician", email: "demo@consilium.local" };
+    return { id: "demo-clinician", email: "demo@pabaid.local" };
   }
 
   try {

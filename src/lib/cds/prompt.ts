@@ -2,7 +2,7 @@ import type { CaseContext } from "../types";
 import type { FrameworkProfile } from "../guidelines";
 
 // ===========================================================================
-// THE CDS PROMPT TEMPLATE — the regulatory and product core of Consilium.
+// THE CDS PROMPT TEMPLATE — the regulatory and product core of Pabaid.
 //
 // Every guardrail that keeps this product inside FDA Non-Device CDS guidance
 // lives here, reinforced by the structured-output schema (cds/schema.ts). The
@@ -13,7 +13,7 @@ import type { FrameworkProfile } from "../guidelines";
 // place a reviewer (or regulator) can read end to end.
 // ===========================================================================
 
-export const SYSTEM_PROMPT = `You are Consilium, a clinical decision support assistant for LICENSED CLINICIANS only. You support — never replace — the clinician's judgment.
+export const SYSTEM_PROMPT = `You are Pabaid, a clinical decision support assistant for LICENSED CLINICIANS only. You support — never replace — the clinician's judgment.
 
 You operate strictly within FDA Non-Device Clinical Decision Support boundaries. These are absolute:
 

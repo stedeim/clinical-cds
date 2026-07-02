@@ -1,15 +1,17 @@
 {
-  "name": "consilium",
+  "name": "pabaid",
   "private": true,
   "version": "0.1.0",
-  "description": "Consilium — encounter-native, explainable clinical decision support for independent clinicians. FDA Non-Device CDS scope.",
+  "description": "Pabaid — encounter-native, explainable clinical decision support for independent clinicians. FDA Non-Device CDS scope.",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint src --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
@@ -31,6 +33,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.62.1"
+    "typescript-eslint": "^8.62.1",
+    "vitest": "^3.2.6"
   }
 }

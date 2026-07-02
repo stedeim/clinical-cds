@@ -1,8 +1,8 @@
-# Consilium
+# Pabaid
 
 > Encounter-native, explainable clinical decision support for independent clinicians.
 
-Consilium helps **licensed clinicians** ask natural-language questions about their
+Pabaid helps **licensed clinicians** ask natural-language questions about their
 own patients' cases and get **structured, explainable** decision support — options
 and considerations, never commands. It is designed to stay inside **FDA Non-Device
 CDS** boundaries and to be deployable in a **HIPAA-compatible** environment.

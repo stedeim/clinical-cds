@@ -1,4 +1,4 @@
-# Consilium — Architecture
+# Pabaid — Architecture
 
 Encounter-native, explainable clinical decision support (CDS) for independent
 clinicians, designed to stay inside **FDA Non-Device CDS** boundaries and to be
