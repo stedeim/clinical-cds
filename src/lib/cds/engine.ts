@@ -1,7 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { CaseContext, GuidelineFramework } from "../types";
 import { resolveFramework } from "../guidelines";
-import { getApiKeys, withKeyFailover } from "../anthropic-keys";
+import { anyProviderConfigured, completeWithFailover } from "../llm";
 import { CdsResponse } from "./schema";
 import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
 import { mockCdsResponse } from "./mock";
@@ -22,33 +21,24 @@ export async function runCdsQuery(args: {
 }): Promise<CdsResult> {
   const framework = resolveFramework(args.frameworkPref);
 
-  // Stub mode: no keys at all -> deterministic mock. Whole flow remains demoable.
-  if (getApiKeys().length === 0) {
+  // Stub mode: no providers at all -> deterministic mock. Whole flow remains demoable.
+  if (!anyProviderConfigured()) {
     return { response: mockCdsResponse({ ...args, framework }), model: "mock" };
   }
-
-  const model = process.env.CDS_MODEL ?? "claude-opus-4-7";
 
   const userPrompt =
     buildUserPrompt({ caseContext: args.caseContext, question: args.question, framework }) +
     "\n\n" +
     RESPONSE_FORMAT_HINT;
 
-  // Key pool: rotates across configured keys on key-level/transient failures,
-  // so a rate-limited or revoked key fails over instead of failing the query.
-  const message = await withKeyFailover((apiKey) =>
-    new Anthropic({ apiKey }).messages.create({
-      model,
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  );
-
-  const text = message.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
+  // Provider chain: fails over across configured providers (and their key
+  // pools) so a rate-limited key or a whole provider outage doesn't fail the
+  // query. `model` reports which provider/model actually answered.
+  const { text, model } = await completeWithFailover({
+    system: SYSTEM_PROMPT,
+    user: userPrompt,
+    maxTokens: 2048,
+  });
 
   const parsed = CdsResponse.safeParse(extractJson(text));
   if (!parsed.success) {

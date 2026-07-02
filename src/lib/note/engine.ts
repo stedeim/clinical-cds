@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { CaseContext } from "../types";
 import {
   GeneratedNote,
@@ -8,7 +7,7 @@ import {
   type TranscriptSegment,
 } from "./schema";
 import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
-import { getApiKeys, withKeyFailover } from "../anthropic-keys";
+import { anyProviderConfigured, completeWithFailover } from "../llm";
 
 // The note-generation engine.
 //
@@ -33,10 +32,10 @@ export async function generateNote(args: {
   caseContext: CaseContext;
   transcript?: TranscriptSegment[];
 }): Promise<GeneratedNoteT> {
-  // Stub mode: no keys → the deterministic note. Structured chart lifts, plus
+  // Stub mode: no providers → the deterministic note. Structured chart lifts, plus
   // verbatim `spoken` spans for any transcript lines (an honest lift of provided
   // text, not a guess). No `inferred` glue — that needs the model.
-  if (getApiKeys().length === 0) {
+  if (!anyProviderConfigured()) {
     return mockNote(args.caseContext, args.transcript);
   }
 
@@ -56,27 +55,17 @@ async function modelNote(args: {
   caseContext: CaseContext;
   transcript?: TranscriptSegment[];
 }): Promise<GeneratedNoteT> {
-  const model = process.env.NOTE_MODEL ?? process.env.CDS_MODEL ?? "claude-opus-4-7";
-
   const userPrompt =
     buildUserPrompt({ caseContext: args.caseContext, transcript: args.transcript }) +
     "\n\n" +
     RESPONSE_FORMAT_HINT;
 
-  // Key pool: fail over across configured keys before the mock fallback.
-  const message = await withKeyFailover((apiKey) =>
-    new Anthropic({ apiKey }).messages.create({
-      model,
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  );
-
-  const text = message.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
+  // Provider chain: fail over across providers/keys before the mock fallback.
+  const { text, model } = await completeWithFailover({
+    system: SYSTEM_PROMPT,
+    user: userPrompt,
+    maxTokens: 2048,
+  });
 
   // The model does not stamp model/generatedAt; the server owns those so they
   // can't be spoofed. Merge them onto the parsed shape before validation.

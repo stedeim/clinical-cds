@@ -1,8 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { TranscriptSegment } from "../note/schema";
 import { TranscriptSummary, type TranscriptSummaryT, type SummaryPointT } from "./schema";
 import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
-import { getApiKeys, withKeyFailover } from "../anthropic-keys";
+import { anyProviderConfigured, completeWithFailover } from "../llm";
 
 // The transcript-summary engine — the "cut the fluff" button.
 //
@@ -15,7 +14,7 @@ import { getApiKeys, withKeyFailover } from "../anthropic-keys";
 export async function summarizeTranscript(
   segments: TranscriptSegment[],
 ): Promise<TranscriptSummaryT> {
-  if (getApiKeys().length === 0) {
+  if (!anyProviderConfigured()) {
     return mockSummary(segments);
   }
   try {
@@ -28,22 +27,12 @@ export async function summarizeTranscript(
 }
 
 async function modelSummary(segments: TranscriptSegment[]): Promise<TranscriptSummaryT> {
-  const model = process.env.SUMMARY_MODEL ?? process.env.CDS_MODEL ?? "claude-opus-4-7";
-
-  // Key pool: fail over across configured keys before the mock fallback.
-  const message = await withKeyFailover((apiKey) =>
-    new Anthropic({ apiKey }).messages.create({
-      model,
-      max_tokens: 1500,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildUserPrompt(segments) + "\n\n" + RESPONSE_FORMAT_HINT }],
-    }),
-  );
-
-  const text = message.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
+  // Provider chain: fail over across providers/keys before the mock fallback.
+  const { text, model } = await completeWithFailover({
+    system: SYSTEM_PROMPT,
+    user: buildUserPrompt(segments) + "\n\n" + RESPONSE_FORMAT_HINT,
+    maxTokens: 1500,
+  });
 
   const raw = extractJson(text) as Record<string, unknown>;
   // The server stamps model/generatedAt so they can't be spoofed. Also drop any
