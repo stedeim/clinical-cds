@@ -7,6 +7,8 @@ import { surfaceCheatSheets } from "@/lib/cheatsheet/engine";
 import type { CheatSheet } from "@/lib/cheatsheet/library";
 import { surfaceRegionalPatterns } from "@/lib/regional/engine";
 import type { RegionalPattern } from "@/lib/regional/library";
+import { checkBoxedWarnings } from "@/lib/fda/boxed-warnings";
+import type { BoxedWarningResult } from "@/lib/fda/boxed-warnings";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 import { detectFramework } from "@/lib/geo";
 import { suggestFollowUps } from "@/lib/followup/suggest";
@@ -123,6 +125,57 @@ function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
   );
 }
 
+// Medications rail with FDA boxed-warning badges. Honesty rule: the ⬛ badge
+// appears ONLY on a confirmed boxed warning from the label (openFDA); a drug
+// we couldn't check shows nothing — absence of the badge is never a claim of
+// safety. Hover shows the label text, cited.
+function MedicationsRail({
+  medications,
+  warnings,
+}: {
+  medications: Medication[];
+  warnings: (BoxedWarningResult | null)[];
+}) {
+  return (
+    <div>
+      <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 }}>Medications</div>
+      {medications.length === 0 ? (
+        <div style={{ fontSize: 12, color: T.faint }}>None on file</div>
+      ) : (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {medications.map((m, i) => {
+            const warning = warnings[i];
+            const flagged = warning?.hasBoxedWarning === true;
+            return (
+              <span
+                key={i}
+                title={flagged ? `FDA BOXED WARNING (from the drug label, via openFDA):\n${warning?.summary ?? ""}` : undefined}
+                style={{
+                  fontSize: 11.5,
+                  lineHeight: 1.35,
+                  color: T.body,
+                  background: "#fff",
+                  border: `1px solid ${flagged ? "#1f2937" : T.line}`,
+                  borderRadius: 6,
+                  padding: "3px 8px",
+                  cursor: flagged ? "help" : undefined,
+                }}
+              >
+                {[m.name, m.dose].filter(Boolean).join(" ")}
+                {flagged && (
+                  <span style={{ font: `700 9px/1 ${T.sans}`, color: "#fff", background: "#1f2937", borderRadius: 3, padding: "2px 5px", marginLeft: 6, letterSpacing: ".04em" }}>
+                    ⬛ BOXED
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RailSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
     <div>
@@ -151,6 +204,9 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   const note = await generateNote({ caseContext: record });
   const doseFindings = await checkDoses(encounter.medications);
   const cheatSheets = surfaceCheatSheets(encounter.problems);
+  // FDA boxed warnings per medication (cached 24h; failures degrade to "no
+  // claim", never to "no warning").
+  const boxedWarnings = await checkBoxedWarnings(encounter.medications);
 
   // The signature must be honest: it carries the real signed-in clinician's name
   // and credential, not a hardcoded placeholder. In stub mode this is the demo
@@ -222,7 +278,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
           <aside style={{ background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 16, padding: "16px 15px", display: "flex", flexDirection: "column", gap: 15 }}>
             <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent }}>Chart</div>
             <RailSection title="Problems" items={encounter.problems.map((p: Problem) => [p.label, p.code].filter(Boolean).join(" · "))} empty="None listed" />
-            <RailSection title="Medications" items={encounter.medications.map((m: Medication) => [m.name, m.dose].filter(Boolean).join(" "))} empty="None on file" />
+            <MedicationsRail medications={encounter.medications} warnings={boxedWarnings} />
             <RailSection title="Allergies" items={encounter.allergies.map((a: Allergy) => a.substance)} empty="NKDA" />
             <RailSection title="Vitals" items={encounter.vitals.map((v: Vital) => `${v.name} ${v.value}`)} empty="None recorded" />
             <RailSection title="Labs" items={encounter.labs.map((l: Lab) => `${l.name} ${l.value ?? l.valueText ?? ""}`.trim())} empty="None recorded" />
