@@ -10,3 +10,6 @@ dist
 next-env.d.ts
 .vercel
 tsconfig.tsbuildinfo
+
+# local agent tooling state
+.claude-flow/
