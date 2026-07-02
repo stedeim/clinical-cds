@@ -15,8 +15,24 @@ function toObjects(key: "label" | "name" | "substance", raw: string): unknown[] 
     .map((item) => ({ [key]: item }));
 }
 
+// Split a free-text medication entry into name / dose / frequency so the
+// dose-check engine gets a checkable `dose` field. Without this, "Lisinopril
+// 200 mg daily" lands whole in `name`, the engine sees no dose, and honestly
+// stays silent — the flag the intake user most needs never fires.
+export function parseMedicationEntry(item: string): Medication {
+  const m = item.match(/^(.+?)\s+(\d+(?:\.\d+)?\s*(?:mcg|ug|µg|mg|g)\b\.?)\s*(.*)$/i);
+  if (!m) return { name: item };
+  return {
+    name: m[1].trim(),
+    dose: m[2].trim(),
+    frequency: m[3].trim() || undefined,
+  };
+}
+
 const problemsSchema = z.string().transform((s) => toObjects("label", s));
-const medicationsSchema = z.string().transform((s) => toObjects("name", s));
+const medicationsSchema = z
+  .string()
+  .transform((s) => toObjects("name", s).map((med) => parseMedicationEntry(med.name)));
 const allergiesSchema = z.string().transform((s) => toObjects("substance", s));
 
 export const CaseIntakeSchema = z.object({
