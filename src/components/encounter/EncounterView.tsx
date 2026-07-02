@@ -9,6 +9,8 @@ import { surfaceRegionalPatterns } from "@/lib/regional/engine";
 import type { RegionalPattern } from "@/lib/regional/library";
 import { checkBoxedWarnings } from "@/lib/fda/boxed-warnings";
 import type { BoxedWarningResult } from "@/lib/fda/boxed-warnings";
+import { getHandouts } from "@/lib/medlineplus/handouts";
+import type { Handout } from "@/lib/medlineplus/handouts";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 import { detectFramework } from "@/lib/geo";
 import { suggestFollowUps } from "@/lib/followup/suggest";
@@ -125,6 +127,35 @@ function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
   );
 }
 
+// Patient handouts card — vetted NIH education pages matched to the chart's
+// ICD-10 codes via MedlinePlus Connect. Something to hand the patient, not
+// clinical guidance; pairs naturally with follow-up reminders.
+function HandoutsCard({ handouts }: { handouts: Handout[] }) {
+  if (handouts.length === 0) return null;
+  return (
+    <div style={{ background: T.card, borderRadius: 16, padding: "15px 18px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)" }}>
+      <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 9 }}>
+        Patient handouts
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {handouts.map((h) => (
+          <a
+            key={h.code}
+            href={h.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 12.5, lineHeight: 1.5, color: T.accentInk, textDecoration: "none" }}
+          >
+            <span style={{ textDecoration: "underline" }}>{h.title}</span> ↗
+            <span style={{ color: T.faint, marginLeft: 6, fontSize: 11 }}>for {h.problemLabel}</span>
+          </a>
+        ))}
+      </div>
+      <div style={{ marginTop: 9, font: `400 10px ${T.mono}`, color: T.faint }}>MedlinePlus · NIH — printable patient education</div>
+    </div>
+  );
+}
+
 // Medications rail with FDA boxed-warning badges. Honesty rule: the ⬛ badge
 // appears ONLY on a confirmed boxed warning from the label (openFDA); a drug
 // we couldn't check shows nothing — absence of the badge is never a claim of
@@ -207,6 +238,8 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   // FDA boxed warnings per medication (cached 24h; failures degrade to "no
   // claim", never to "no warning").
   const boxedWarnings = await checkBoxedWarnings(encounter.medications);
+  // Patient education pages for the chart's coded problems (cached 24h).
+  const handouts = await getHandouts(encounter.problems);
 
   // The signature must be honest: it carries the real signed-in clinician's name
   // and credential, not a hardcoded placeholder. In stub mode this is the demo
@@ -320,6 +353,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             {regionalPatterns.map((pattern) => (
               <RegionalPatternCard key={pattern.id} pattern={pattern} />
             ))}
+            <HandoutsCard handouts={handouts} />
             <div>
               <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>
               <QAPanel encounterId={encounter.id} initialFramework={defaultFramework} />
