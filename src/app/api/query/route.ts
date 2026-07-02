@@ -4,6 +4,7 @@ import { getCase } from "@/lib/store";
 import { runCdsQuery, CdsContractError } from "@/lib/cds/engine";
 import { recordAudit } from "@/lib/audit";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { GuidelineFramework } from "@/lib/types";
 
 // CDS query endpoint. PHI stays server-side: the browser sends an encounter id +
@@ -25,6 +26,14 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`query:${clientIp(req)}`, { limit: 30, windowMs: 60_000 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());

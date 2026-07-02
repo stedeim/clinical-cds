@@ -5,6 +5,7 @@ import { generateNote, NoteContractError } from "@/lib/note/engine";
 import { parseTranscript } from "@/lib/note/transcript";
 import { recordAudit } from "@/lib/audit";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 // Note-generation endpoint. Same PHI posture as /api/query: the browser sends an
 // encounter id (+ an optional pasted transcript), never the case payload. This
@@ -28,6 +29,14 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`note:${clientIp(req)}`, { limit: 30, windowMs: 60_000 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());
