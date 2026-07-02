@@ -7,6 +7,9 @@ import { surfaceCheatSheets } from "@/lib/cheatsheet/engine";
 import type { CheatSheet } from "@/lib/cheatsheet/library";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 import { detectFramework } from "@/lib/geo";
+import { suggestFollowUps } from "@/lib/followup/suggest";
+import { listFollowUps } from "@/lib/followup/store";
+import { FollowUpCard } from "@/components/encounter/FollowUpCard";
 import { headers } from "next/headers";
 
 // Encounter screen — the synthesized "best of three" direction graduated onto
@@ -127,6 +130,13 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   // Accept-Language). Only the select's initial value — manual override stays.
   const defaultFramework = detectFramework(await headers());
 
+  // Follow-up suggestions come from the visit's own text (deterministic parser
+  // over the note spans + HPI — no LLM); the clinician confirms, edits, and
+  // picks recipients before anything is created.
+  const noteText = note.sections.flatMap((s) => s.spans.map((sp) => sp.text));
+  const followUpSuggestions = suggestFollowUps([...(encounter.hpi ? [encounter.hpi] : []), ...noteText]);
+  const followUps = clinician ? listFollowUps(encounter.id, clinician.id) : [];
+
   return (
     <div
       style={{
@@ -192,15 +202,23 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
           </aside>
 
           {/* visit note — client island rendering generateNote()'s spans, with a
-              paste-transcript flow that re-grounds `spoken` spans via /api/note */}
-          <NoteCard
-            encounterId={encounter.id}
-            initialNote={note}
-            doseFindings={doseFindings}
-            medications={encounter.medications}
-            clinicianName={clinician?.fullName}
-            clinicianCredential={clinician?.credential}
-          />
+              paste-transcript flow that re-grounds `spoken` spans via /api/note.
+              Below it: follow-up reminders with clinician-chosen recipients. */}
+          <div>
+            <NoteCard
+              encounterId={encounter.id}
+              initialNote={note}
+              doseFindings={doseFindings}
+              medications={encounter.medications}
+              clinicianName={clinician?.fullName}
+              clinicianCredential={clinician?.credential}
+            />
+            <FollowUpCard
+              encounterId={encounter.id}
+              initialFollowUps={followUps}
+              suggestions={followUpSuggestions}
+            />
+          </div>
 
           {/* Auto-surfaced cheat-sheets (curated library, problem-matched) + the
               Q&A engine, contextual to this patient */}
