@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { CaseContext, GuidelineFramework } from "../types";
 import { resolveFramework } from "../guidelines";
+import { getApiKeys, withKeyFailover } from "../anthropic-keys";
 import { CdsResponse } from "./schema";
 import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
 import { mockCdsResponse } from "./mock";
@@ -20,14 +21,12 @@ export async function runCdsQuery(args: {
   frameworkPref?: GuidelineFramework;
 }): Promise<CdsResult> {
   const framework = resolveFramework(args.frameworkPref);
-  const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  // Stub mode: no key -> deterministic mock. Whole flow remains demoable.
-  if (!apiKey) {
+  // Stub mode: no keys at all -> deterministic mock. Whole flow remains demoable.
+  if (getApiKeys().length === 0) {
     return { response: mockCdsResponse({ ...args, framework }), model: "mock" };
   }
 
-  const client = new Anthropic({ apiKey });
   const model = process.env.CDS_MODEL ?? "claude-opus-4-7";
 
   const userPrompt =
@@ -35,12 +34,16 @@ export async function runCdsQuery(args: {
     "\n\n" +
     RESPONSE_FORMAT_HINT;
 
-  const message = await client.messages.create({
-    model,
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  // Key pool: rotates across configured keys on key-level/transient failures,
+  // so a rate-limited or revoked key fails over instead of failing the query.
+  const message = await withKeyFailover((apiKey) =>
+    new Anthropic({ apiKey }).messages.create({
+      model,
+      max_tokens: 2048,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userPrompt }],
+    }),
+  );
 
   const text = message.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")

@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { TranscriptSegment } from "../note/schema";
 import { TranscriptSummary, type TranscriptSummaryT, type SummaryPointT } from "./schema";
 import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
+import { getApiKeys, withKeyFailover } from "../anthropic-keys";
 
 // The transcript-summary engine — the "cut the fluff" button.
 //
@@ -14,12 +15,11 @@ import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
 export async function summarizeTranscript(
   segments: TranscriptSegment[],
 ): Promise<TranscriptSummaryT> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  if (getApiKeys().length === 0) {
     return mockSummary(segments);
   }
   try {
-    return await modelSummary(segments, apiKey);
+    return await modelSummary(segments);
   } catch {
     // A model failure must never break the encounter screen; the extractive
     // mock is always a valid, honest summary.
@@ -27,19 +27,18 @@ export async function summarizeTranscript(
   }
 }
 
-async function modelSummary(
-  segments: TranscriptSegment[],
-  apiKey: string,
-): Promise<TranscriptSummaryT> {
-  const client = new Anthropic({ apiKey });
+async function modelSummary(segments: TranscriptSegment[]): Promise<TranscriptSummaryT> {
   const model = process.env.SUMMARY_MODEL ?? process.env.CDS_MODEL ?? "claude-opus-4-7";
 
-  const message = await client.messages.create({
-    model,
-    max_tokens: 1500,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: buildUserPrompt(segments) + "\n\n" + RESPONSE_FORMAT_HINT }],
-  });
+  // Key pool: fail over across configured keys before the mock fallback.
+  const message = await withKeyFailover((apiKey) =>
+    new Anthropic({ apiKey }).messages.create({
+      model,
+      max_tokens: 1500,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: buildUserPrompt(segments) + "\n\n" + RESPONSE_FORMAT_HINT }],
+    }),
+  );
 
   const text = message.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")

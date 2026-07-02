@@ -8,6 +8,7 @@ import {
   type TranscriptSegment,
 } from "./schema";
 import { SYSTEM_PROMPT, RESPONSE_FORMAT_HINT, buildUserPrompt } from "./prompt";
+import { getApiKeys, withKeyFailover } from "../anthropic-keys";
 
 // The note-generation engine.
 //
@@ -32,17 +33,15 @@ export async function generateNote(args: {
   caseContext: CaseContext;
   transcript?: TranscriptSegment[];
 }): Promise<GeneratedNoteT> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  // Stub mode: no key → the deterministic note. Structured chart lifts, plus
+  // Stub mode: no keys → the deterministic note. Structured chart lifts, plus
   // verbatim `spoken` spans for any transcript lines (an honest lift of provided
   // text, not a guess). No `inferred` glue — that needs the model.
-  if (!apiKey) {
+  if (getApiKeys().length === 0) {
     return mockNote(args.caseContext, args.transcript);
   }
 
   try {
-    return await modelNote(args, apiKey);
+    return await modelNote(args);
   } catch {
     // Fail safe: a model/parse failure must never break the encounter screen.
     // The deterministic note is always a valid, honest note.
@@ -53,11 +52,10 @@ export async function generateNote(args: {
 // Model-backed draft. Allowed to emit `inferred` glue and (with a transcript)
 // `spoken` spans; the Zod gate + prompt keep the exam moat intact. Throws on any
 // contract failure so the caller can fall back to the mock.
-async function modelNote(
-  args: { caseContext: CaseContext; transcript?: TranscriptSegment[] },
-  apiKey: string,
-): Promise<GeneratedNoteT> {
-  const client = new Anthropic({ apiKey });
+async function modelNote(args: {
+  caseContext: CaseContext;
+  transcript?: TranscriptSegment[];
+}): Promise<GeneratedNoteT> {
   const model = process.env.NOTE_MODEL ?? process.env.CDS_MODEL ?? "claude-opus-4-7";
 
   const userPrompt =
@@ -65,12 +63,15 @@ async function modelNote(
     "\n\n" +
     RESPONSE_FORMAT_HINT;
 
-  const message = await client.messages.create({
-    model,
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  // Key pool: fail over across configured keys before the mock fallback.
+  const message = await withKeyFailover((apiKey) =>
+    new Anthropic({ apiKey }).messages.create({
+      model,
+      max_tokens: 2048,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userPrompt }],
+    }),
+  );
 
   const text = message.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
