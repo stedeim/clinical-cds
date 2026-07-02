@@ -160,6 +160,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             encounterId={encounter.id}
             initialNote={note}
             doseFindings={doseFindings}
+            medications={encounter.medications}
             clinicianName={clinician?.fullName}
             clinicianCredential={clinician?.credential}
           />

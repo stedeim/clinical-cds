@@ -105,6 +105,60 @@ describe("serializeNote", () => {
     expect(out).not.toContain("DOSE CAUTIONS");
   });
 
+  // The accept/reject flow: a flagged caution exports with the clinician's
+  // decision attached — kept, revised (with the honest re-check result), or an
+  // explicit "not yet reviewed" so an undecided flag can't pass silently.
+  const flaggedLisinopril: DoseFinding = {
+    medication: "Lisinopril",
+    rxcui: null,
+    ingredient: "lisinopril",
+    parsedDoseMg: 200,
+    ceilingMg: 80,
+    status: "exceeds",
+    message: "Lisinopril ~200 mg/day is above the reference maximum of 80 mg/day.",
+    citation: { title: "Lisinopril — maximum daily dose", source: "FDA label (DailyMed)" },
+  };
+
+  it("marks an undecided flagged caution as not yet reviewed", () => {
+    const out = serializeNote(makeNote(), { doseFindings: [flaggedLisinopril] });
+    expect(out).toContain("Clinician decision: not yet reviewed.");
+  });
+
+  it("records a 'kept as documented' decision", () => {
+    const out = serializeNote(makeNote(), {
+      doseFindings: [flaggedLisinopril],
+      doseDecisions: { 0: { kind: "kept" } },
+    });
+    expect(out).toContain("Clinician decision: reviewed — kept as documented.");
+    expect(out).not.toContain("not yet reviewed");
+  });
+
+  it("records a revised decision with the re-check result, and annotates the plan line", () => {
+    const out = serializeNote(makeNote(), {
+      doseFindings: [flaggedLisinopril],
+      doseDecisions: {
+        0: {
+          kind: "revised",
+          newDose: "20 mg",
+          refreshed: {
+            medication: "Lisinopril",
+            rxcui: null,
+            ingredient: "lisinopril",
+            parsedDoseMg: 20,
+            ceilingMg: 80,
+            status: "ok",
+            message: "Lisinopril ~20 mg/day is within the reference maximum of 80 mg/day.",
+            citation: null,
+          },
+        },
+      },
+    });
+    // Decision recorded under the original caution — the audit trail survives.
+    expect(out).toContain('Clinician decision: revised to "20 mg". Lisinopril ~20 mg/day is within');
+    // And the PLAN line itself carries the revision — that's what hits the EHR.
+    expect(out).toContain('Lisinopril 10 mg daily (dose revised by clinician to "20 mg")');
+  });
+
   it("watermarks an unsigned note as DRAFT", () => {
     const out = serializeNote(makeNote());
     expect(out).toContain("DRAFT — not signed.");

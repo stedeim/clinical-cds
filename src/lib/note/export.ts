@@ -1,5 +1,6 @@
 import type { GeneratedNote, NoteSpan } from "./schema";
 import type { DoseFinding } from "../dosecheck/schema";
+import type { DoseDecision } from "../dosecheck/decisions";
 
 // Plain-text serialization of a finished visit note.
 //
@@ -27,6 +28,9 @@ export interface SerializeOptions {
   signature?: NoteSignature | null;
   // Reproduced as a CAUTIONS block when any finding is flagging (exceeds/below).
   doseFindings?: DoseFinding[];
+  // Clinician decisions on flagged findings, keyed by the finding's index in
+  // `doseFindings`. A caution with no decision exports as unreviewed.
+  doseDecisions?: Record<number, DoseDecision>;
 }
 
 const SECTION_ORDER = ["subjective", "objective", "assessment", "plan"] as const;
@@ -59,7 +63,19 @@ export function serializeNote(note: GeneratedNote, opts: SerializeOptions = {}):
     const spans = note.sections.find((s) => s.heading === heading)?.spans ?? [];
     out.push(HEADING_LABEL[heading]);
 
-    for (const span of spans) out.push(renderSpan(span));
+    for (const span of spans) {
+      // A clinician-revised dose must be visible on the plan line itself, not
+      // only in the cautions block — the plan is what gets pasted into an EHR.
+      const medIdx = heading === "plan" && span.sourceRef?.startsWith("med:")
+        ? parseInt(span.sourceRef.slice(4), 10)
+        : NaN;
+      const decision = Number.isInteger(medIdx) ? opts.doseDecisions?.[medIdx] : undefined;
+      out.push(
+        decision?.kind === "revised"
+          ? `${renderSpan(span)} (dose revised by clinician to "${decision.newDose}")`
+          : renderSpan(span),
+      );
+    }
 
     if (heading === "objective") {
       if (examLines.length) {
@@ -75,14 +91,26 @@ export function serializeNote(note: GeneratedNote, opts: SerializeOptions = {}):
     out.push("");
   }
 
-  const flagged = (opts.doseFindings ?? []).filter(
-    (f) => f.status === "exceeds" || f.status === "below_threshold",
-  );
-  if (flagged.length) {
+  const findings = opts.doseFindings ?? [];
+  const flaggedIdx = findings
+    .map((f, i) => ({ f, i }))
+    .filter(({ f }) => f.status === "exceeds" || f.status === "below_threshold");
+  if (flaggedIdx.length) {
     out.push("DOSE CAUTIONS");
-    for (const f of flagged) {
+    for (const { f, i } of flaggedIdx) {
       const cite = f.citation ? ` [${f.citation.title} — ${f.citation.source}]` : "";
       out.push(`- ${f.message}${cite}`);
+      const decision = opts.doseDecisions?.[i];
+      if (decision?.kind === "kept") {
+        out.push("  Clinician decision: reviewed — kept as documented.");
+      } else if (decision?.kind === "revised") {
+        const rCite = decision.refreshed.citation
+          ? ` [${decision.refreshed.citation.title} — ${decision.refreshed.citation.source}]`
+          : "";
+        out.push(`  Clinician decision: revised to "${decision.newDose}". ${decision.refreshed.message}${rCite}`);
+      } else {
+        out.push("  Clinician decision: not yet reviewed.");
+      }
     }
     out.push("");
   }
