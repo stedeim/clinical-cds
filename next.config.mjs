@@ -37,9 +37,9 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // Ambient scribe will need microphone=(self) when it lands; until
-          // then nothing in the app touches these capabilities.
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // microphone=(self): in-encounter dictation (Web Speech API) needs
+          // the mic. Camera and geolocation stay blocked — nothing uses them.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
         ],
       },

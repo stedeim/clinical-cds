@@ -192,12 +192,12 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             <RailSection title="Vitals" items={encounter.vitals.map((v: Vital) => `${v.name} ${v.value}`)} empty="None recorded" />
             <RailSection title="Labs" items={encounter.labs.map((l: Lab) => `${l.name} ${l.value ?? l.valueText ?? ""}`.trim())} empty="None recorded" />
 
-            {/* Ambient capture (audio) isn't built. Until it is, a transcript can
-                be pasted into the note to ground `spoken` spans — see the note's
-                "+ Add transcript". No fake live timer, no audio claims. */}
+            {/* True ambient capture (passive, diarized) isn't built. Push-button
+                dictation IS: the note's "+ Add transcript" panel has a mic that
+                turns speech into DR:/PT: lines via the browser speech engine. */}
             <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-              <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>Ambient transcript</div>
-              <div style={{ fontSize: 11.5, lineHeight: 1.5, color: T.faint }}>Live audio capture is coming. For now, paste a visit transcript in the note to ground spoken lines.</div>
+              <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>Visit transcript</div>
+              <div style={{ fontSize: 11.5, lineHeight: 1.5, color: T.faint }}>Dictate with the mic (demo speech engine) or paste a transcript in the note — either grounds spoken lines. Hands-free ambient capture is coming.</div>
             </div>
           </aside>
 

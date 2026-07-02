@@ -7,6 +7,7 @@ import type { DoseFinding } from "@/lib/dosecheck/schema";
 import { reviseDose, isFlagging, type DoseDecision } from "@/lib/dosecheck/decisions";
 import type { Medication } from "@/lib/types";
 import { serializeNote, noteFilename, type NoteSignature } from "@/lib/note/export";
+import { Dictation } from "@/components/encounter/Dictation";
 
 // The Visit Note card — a client island so it can re-ground the note against a
 // pasted transcript without a full page reload.
@@ -395,11 +396,14 @@ export function NoteCard({
       {open && !grounded && (
         <div style={{ marginBottom: 16, padding: "12px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 7 }}>
-            <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>Paste visit transcript</div>
+            <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>Dictate or paste visit transcript</div>
             <button onClick={() => setText(DEMO_TRANSCRIPT)} style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
               use sample
             </button>
           </div>
+          {/* Voice dictation appends finalized DR:/PT: lines to the same textarea
+              the paste flow uses — one pipeline into the grounding engine. */}
+          <Dictation onSegment={(line) => setText((prev) => (prev ? prev.replace(/\n?$/, "\n") : "") + line)} />
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -416,7 +420,7 @@ export function NoteCard({
               {loading ? "Grounding…" : "Ground note"}
             </button>
             <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>
-              Text only — no audio. Lines become <b style={{ color: T.accentInk }}>spoken</b> spans in the note.
+              Only these text lines reach Pabaid — audio never does. Lines become <b style={{ color: T.accentInk }}>spoken</b> spans in the note.
             </span>
           </div>
           {error && <div style={{ marginTop: 8, fontSize: 11.5, color: T.amberInk }}>{error}</div>}
