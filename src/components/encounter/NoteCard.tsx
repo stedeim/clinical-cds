@@ -7,6 +7,7 @@ import type { DoseFinding } from "@/lib/dosecheck/schema";
 import { reviseDose, isFlagging, type DoseDecision } from "@/lib/dosecheck/decisions";
 import type { Medication } from "@/lib/types";
 import { serializeNote, noteFilename, type NoteSignature } from "@/lib/note/export";
+import { buildPrintHtml } from "@/lib/note/print";
 import { sectionToText, withEditedSection } from "@/lib/note/edit";
 import { Dictation } from "@/components/encounter/Dictation";
 import { SummaryCard } from "@/components/encounter/SummaryCard";
@@ -277,6 +278,21 @@ export function NoteCard({
     a.download = noteFilename(note);
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Print / Save-as-PDF via the browser's native dialog — no PDF library.
+  // The print document is built by a pure, tested function; unsigned notes
+  // carry a diagonal DRAFT watermark.
+  function printNote() {
+    const w = window.open("", "_blank", "width=840,height=1000");
+    if (!w) {
+      setError("Pop-up blocked — allow pop-ups to print.");
+      return;
+    }
+    w.document.write(buildPrintHtml(note, { examLines, signature, doseFindings, doseDecisions }));
+    w.document.close();
+    w.focus();
+    w.print();
   }
 
   function toggleSign() {
@@ -598,6 +614,12 @@ export function NoteCard({
           style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
         >
           Download .txt
+        </button>
+        <button
+          onClick={printNote}
+          style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+        >
+          Print / PDF
         </button>
         <span style={{ fontSize: 11.5, color: T.muted, marginLeft: "auto", textAlign: "right", lineHeight: 1.4 }}>
           {signedAt ? (
