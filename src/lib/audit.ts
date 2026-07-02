@@ -16,6 +16,7 @@ export interface AuditEvent {
     | "summary_generate"
     | "export_note"
     | "login"
+    | "verification_check"
     | "followup_create"
     | "reminder_send";
   encounterId?: string;

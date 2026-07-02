@@ -11,6 +11,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [credential, setCredential] = useState("MD");
+  const [npi, setNpi] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     const res = await fetch(mode === "login" ? "/api/auth/login" : "/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, fullName, credential }),
+      body: JSON.stringify({
+        email,
+        password,
+        fullName,
+        credential,
+        ...(mode === "signup" && npi.trim() ? { npi: npi.trim() } : {}),
+      }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -34,8 +41,23 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
-    setMessage(mode === "login" ? "Signed in." : "Account created.");
-    window.location.href = "/";
+    if (mode === "login") {
+      setMessage("Signed in.");
+      window.location.href = "/";
+      return;
+    }
+
+    // Signup: surface the verification outcome honestly before redirecting —
+    // an instantly verified clinician should know it, and a pending one
+    // should know why.
+    if (data.verification?.status === "verified") {
+      setMessage("Account created — verified against the NPPES registry. Redirecting…");
+    } else {
+      setMessage(`Account created. ${data.verification?.reason ?? "Verification pending."} Redirecting…`);
+    }
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 2500);
   }
 
   return (
@@ -44,6 +66,13 @@ export function AuthForm({ mode }: AuthFormProps) {
         <>
           <Field label="Full name" value={fullName} onChange={setFullName} required />
           <Field label="Credential" value={credential} onChange={setCredential} required />
+          <div>
+            <Field label="NPI (US clinicians — optional)" value={npi} onChange={setNpi} />
+            <p className="mt-1 text-xs text-slate-500">
+              10-digit NPI enables instant verification against the public NPPES registry. Without one
+              (or outside the US), your account is verified by manual review.
+            </p>
+          </div>
         </>
       )}
       <Field label="Email" type="email" value={email} onChange={setEmail} required />

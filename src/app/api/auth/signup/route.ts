@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { verifyClinicianNpi } from "@/lib/verification/npi";
+import { recordAudit } from "@/lib/audit";
 
 const Body = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   fullName: z.string().min(1),
   credential: z.string().min(1),
+  // Optional US NPI — enables instant verification against the NPPES
+  // registry. Absent (or non-US) → account stays pending for manual review.
+  npi: z.string().regex(/^\d{10}$/).optional(),
 });
 
 export const runtime = "nodejs";
@@ -41,11 +46,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: signUpError?.message ?? "Sign up failed." }, { status: 400 });
     }
 
+    // Real verification, not a database flag: with an NPI, check the NPPES
+    // registry inline (~200 ms; every failure mode degrades to "pending" for
+    // manual review — auto-verification only ever says yes).
+    let verification: { verdict: "verified" | "pending"; reason: string } = {
+      verdict: "pending",
+      reason: body.npi
+        ? "Verification in progress."
+        : "No NPI provided — held for manual review (non-US clinicians are reviewed manually).",
+    };
+    if (body.npi) {
+      verification = await verifyClinicianNpi({ npi: body.npi, fullName: body.fullName });
+    }
+
     const { error: insertError } = await admin.from("clinicians").insert({
       id: authData.user.id,
       full_name: body.fullName,
       credential: body.credential,
-      verification_status: "pending",
+      npi: body.npi ?? null,
+      verification_status: verification.verdict,
     });
 
     if (insertError) {
@@ -56,7 +75,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Sign up failed. Please try again." }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    // The verification outcome is compliance-relevant — audit it with the
+    // decision basis (reason), never the raw registry payload.
+    await recordAudit({
+      clinicianId: authData.user.id,
+      action: "verification_check",
+      detail: { verdict: verification.verdict, reason: verification.reason, npiProvided: !!body.npi },
+    });
+
+    return NextResponse.json({
+      success: true,
+      verification: { status: verification.verdict, reason: verification.reason },
+    });
   } catch (err) {
     console.error("[auth/signup]", err);
     return NextResponse.json({ error: "Internal error." }, { status: 500 });
