@@ -5,7 +5,7 @@ export interface CaseRecord extends CaseContext {
   updatedAt: string;
 }
 
-export type GuidelineFramework = "US" | "UK_NICE" | "WHO";
+export type GuidelineFramework = "US" | "UK_NICE" | "CA" | "AU" | "NZ" | "IE" | "WHO";
 
 export type Sex = "female" | "male" | "intersex" | "unknown";
 

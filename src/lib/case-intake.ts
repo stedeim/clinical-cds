@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { FRAMEWORK_IDS } from "@/lib/guidelines";
 import type { CaseContext, Problem, Medication, Allergy } from "@/lib/types";
 
 export const SexEnum = z.enum(["female", "male", "intersex", "unknown"]);
-export const FrameworkEnum = z.enum(["US", "UK_NICE", "WHO"]);
+export const FrameworkEnum = z.enum(FRAMEWORK_IDS);
 
 function toObjects(key: "label", raw: string): Problem[];
 function toObjects(key: "name", raw: string): Medication[];

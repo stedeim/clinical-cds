@@ -3,13 +3,10 @@
 import { useState } from "react";
 import type { CdsResponse } from "@/lib/cds/schema";
 import type { GuidelineFramework } from "@/lib/types";
+import { FRAMEWORK_IDS, FRAMEWORKS } from "@/lib/guidelines";
 import { CdsResponseView } from "@/components/output/CdsResponseView";
 
-const FRAMEWORKS: { id: GuidelineFramework; label: string }[] = [
-  { id: "US", label: "US societies" },
-  { id: "UK_NICE", label: "UK NICE" },
-  { id: "WHO", label: "WHO" },
-];
+const FRAMEWORK_OPTIONS = FRAMEWORK_IDS.map((id) => ({ id, label: FRAMEWORKS[id].shortLabel }));
 
 const SUGGESTIONS = [
   "What should I consider for this presentation?",
@@ -20,9 +17,17 @@ const SUGGESTIONS = [
 // Client component: holds the question, calls the server route, renders the
 // validated structured response. Note it sends only the encounterId + question —
 // the PHI-bearing case payload never round-trips through the browser.
-export function QAPanel({ encounterId }: { encounterId: string }) {
+// `initialFramework` is the geo-detected default (see lib/geo.ts) — the select
+// always remains a manual override.
+export function QAPanel({
+  encounterId,
+  initialFramework = "US",
+}: {
+  encounterId: string;
+  initialFramework?: GuidelineFramework;
+}) {
   const [question, setQuestion] = useState("");
-  const [framework, setFramework] = useState<GuidelineFramework>("US");
+  const [framework, setFramework] = useState<GuidelineFramework>(initialFramework);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ response: CdsResponse; model: string } | null>(null);
@@ -59,7 +64,7 @@ export function QAPanel({ encounterId }: { encounterId: string }) {
             className="rounded border border-slate-300 px-2 py-1 text-sm"
             aria-label="Guideline framework"
           >
-            {FRAMEWORKS.map((f) => (
+            {FRAMEWORK_OPTIONS.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
               </option>

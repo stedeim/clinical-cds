@@ -5,6 +5,7 @@ import { runCdsQuery, CdsContractError } from "@/lib/cds/engine";
 import { recordAudit } from "@/lib/audit";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { FRAMEWORK_IDS } from "@/lib/guidelines";
 import type { GuidelineFramework } from "@/lib/types";
 
 // CDS query endpoint. PHI stays server-side: the browser sends an encounter id +
@@ -22,7 +23,7 @@ export const runtime = "nodejs";
 const Body = z.object({
   encounterId: z.string().min(1),
   question: z.string().min(3).max(2000),
-  framework: z.enum(["US", "UK_NICE", "WHO"]).optional(),
+  framework: z.enum(FRAMEWORK_IDS).optional(),
 });
 
 export async function POST(req: Request) {

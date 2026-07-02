@@ -6,6 +6,8 @@ import { checkDoses } from "@/lib/dosecheck/engine";
 import { surfaceCheatSheets } from "@/lib/cheatsheet/engine";
 import type { CheatSheet } from "@/lib/cheatsheet/library";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
+import { detectFramework } from "@/lib/geo";
+import { headers } from "next/headers";
 
 // Encounter screen — the synthesized "best of three" direction graduated onto
 // real case data (see /design/best for the standalone mock and its rationale).
@@ -121,6 +123,10 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   // clinician; with Supabase it's the verified account row.
   const clinician = await getCurrentClinician(await currentUserIdFromCookies());
 
+  // Geo-detected default guideline framework (edge country header, then
+  // Accept-Language). Only the select's initial value — manual override stays.
+  const defaultFramework = detectFramework(await headers());
+
   return (
     <div
       style={{
@@ -204,7 +210,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             ))}
             <div>
               <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>
-              <QAPanel encounterId={encounter.id} />
+              <QAPanel encounterId={encounter.id} initialFramework={defaultFramework} />
             </div>
           </div>
         </div>

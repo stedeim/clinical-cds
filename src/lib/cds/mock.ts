@@ -82,7 +82,7 @@ export function mockCdsResponse(args: {
       {
         title: `${framework.preferredSources[0]} — relevant guidance`,
         source: framework.preferredSources[0],
-        framework: framework.id === "UK_NICE" ? "UK_NICE" : framework.id === "WHO" ? "WHO" : "US",
+        framework: framework.id,
       },
     ],
     uncertainties: [

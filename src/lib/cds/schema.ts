@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FRAMEWORK_IDS } from "../guidelines";
 
 // The structured CDS response contract.
 //
@@ -46,7 +47,7 @@ export const Citation = z.object({
   title: z.string().min(1),
   source: z.string().min(1), // e.g. "NICE NG12", "UpToDate", "FDA label"
   url: z.string().url().optional(),
-  framework: z.enum(["US", "UK_NICE", "WHO", "other"]).default("other"),
+  framework: z.enum([...FRAMEWORK_IDS, "other"]).default("other"),
 });
 
 export const TeachingPoint = z.object({
