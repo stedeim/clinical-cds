@@ -42,8 +42,23 @@ export const CaseIntakeSchema = z.object({
   sex: SexEnum.default("unknown"),
   chiefComplaint: z.string().min(1).max(500),
   hpi: z.string().max(4000).optional(),
-  problems: z.union([z.array(z.object({ label: z.string() })), problemsSchema]).default([]),
-  medications: z.union([z.array(z.object({ name: z.string() })), medicationsSchema]).default([]),
+  // Structured entries (from the autocomplete pickers) carry the ICD-10 code /
+  // dose / frequency; the string arms remain for comma-separated free text.
+  problems: z
+    .union([z.array(z.object({ label: z.string().min(1), code: z.string().optional() })), problemsSchema])
+    .default([]),
+  medications: z
+    .union([
+      z.array(
+        z.object({
+          name: z.string().min(1),
+          dose: z.string().optional(),
+          frequency: z.string().optional(),
+        }),
+      ),
+      medicationsSchema,
+    ])
+    .default([]),
   allergies: z.union([z.array(z.object({ substance: z.string() })), allergiesSchema]).default([]),
   vitals: z.string().max(2000).optional(),
   labs: z.string().max(2000).optional(),

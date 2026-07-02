@@ -14,7 +14,9 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co",
+  // clinicaltables.nlm.nih.gov: keyless NIH autocomplete for the intake form
+  // (only the typed search term is sent — never patient identity or chart).
+  "connect-src 'self' https://*.supabase.co https://clinicaltables.nlm.nih.gov",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

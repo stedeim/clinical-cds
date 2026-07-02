@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import type { Problem, Medication } from "@/lib/types";
+import { ProblemsField, MedicationsField } from "@/components/intake/CodedFields";
 
 const DEFAULTS = {
   externalRef: "",
@@ -8,8 +10,6 @@ const DEFAULTS = {
   sex: "unknown",
   chiefComplaint: "",
   hpi: "",
-  problems: "",
-  medications: "",
   allergies: "",
   vitals: "",
   labs: "",
@@ -18,6 +18,10 @@ const DEFAULTS = {
 
 export function CaseIntakeForm() {
   const [form, setForm] = useState(DEFAULTS);
+  // Structured entries from the ICD-10/RxTerms pickers (free text still
+  // possible inside each picker) — sent as arrays, codes and doses intact.
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -34,6 +38,8 @@ export function CaseIntakeForm() {
 
     const body = {
       ...form,
+      problems,
+      medications,
       ageYears: form.ageYears ? Number(form.ageYears) : undefined,
     };
 
@@ -52,6 +58,8 @@ export function CaseIntakeForm() {
 
     setCreatedId(data.record?.encounter?.id);
     setForm(DEFAULTS);
+    setProblems([]);
+    setMedications([]);
     setLoading(false);
   }
 
@@ -93,8 +101,8 @@ export function CaseIntakeForm() {
       <Area label="HPI" value={form.hpi} onChange={(v) => update("hpi", v)} rows={3} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Area label="Problems (comma-separated)" value={form.problems} onChange={(v) => update("problems", v)} />
-        <Area label="Medications (comma-separated)" value={form.medications} onChange={(v) => update("medications", v)} />
+        <ProblemsField problems={problems} onChange={setProblems} />
+        <MedicationsField medications={medications} onChange={setMedications} />
       </div>
       <Area label="Allergies (comma-separated)" value={form.allergies} onChange={(v) => update("allergies", v)} />
 
