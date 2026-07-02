@@ -18,7 +18,10 @@ import { z } from "zod";
 //  - structured: lifted verbatim from a chart field (vital, lab, problem, med)
 //  - inferred:   the model filled it in; nothing in the record grounds it, so
 //                the clinician must confirm it
-export const ProvenanceKind = z.enum(["spoken", "structured", "inferred"]);
+//  - clinician:  typed by the signed-in clinician (an in-place section edit).
+//                Their words, their authority — needs no confirm highlight and
+//                claims no machine source.
+export const ProvenanceKind = z.enum(["spoken", "structured", "inferred", "clinician"]);
 
 // A contiguous run of note text with a single provenance.
 export const NoteSpan = z
@@ -42,10 +45,10 @@ export const NoteSpan = z
         path: ["sourceRef"],
       });
     }
-    if (span.provenance === "inferred" && span.sourceRef !== null) {
+    if ((span.provenance === "inferred" || span.provenance === "clinician") && span.sourceRef !== null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "inferred span must have sourceRef === null (it claims no source)",
+        message: `${span.provenance} span must have sourceRef === null (it claims no machine source)`,
         path: ["sourceRef"],
       });
     }

@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import type { GeneratedNote, NoteSpan, NoteSection, TranscriptSegment } from "@/lib/note/schema";
+import type { GeneratedNote, NoteSpan, NoteSection, NoteHeading, TranscriptSegment } from "@/lib/note/schema";
 import type { DoseFinding } from "@/lib/dosecheck/schema";
 import { reviseDose, isFlagging, type DoseDecision } from "@/lib/dosecheck/decisions";
 import type { Medication } from "@/lib/types";
 import { serializeNote, noteFilename, type NoteSignature } from "@/lib/note/export";
+import { sectionToText, withEditedSection } from "@/lib/note/edit";
 import { Dictation } from "@/components/encounter/Dictation";
 import { SummaryCard } from "@/components/encounter/SummaryCard";
+import { DoseChip, DoseBanner } from "@/components/encounter/DoseReview";
 import type { TranscriptSummaryT } from "@/lib/summary/schema";
 
 // The Visit Note card — a client island so it can re-ground the note against a
@@ -69,6 +71,7 @@ function spanStyle(provenance: NoteSpan["provenance"]): CSSProperties {
 function spanTitle(provenance: NoteSpan["provenance"]): string | undefined {
   if (provenance === "inferred") return "Inferred by Pabaid — please confirm against the visit.";
   if (provenance === "spoken") return "Spoken — grounded in the visit transcript.";
+  if (provenance === "clinician") return "Written by you.";
   return undefined;
 }
 
@@ -80,152 +83,68 @@ function SpanText({ span }: { span: NoteSpan }) {
   );
 }
 
-function DoseChip({ finding, decision }: { finding: DoseFinding; decision?: DoseDecision }) {
-  // A decided flag must not keep shouting amber: once the clinician has
-  // reviewed it (kept, or revised to a within-ceiling dose) the chip goes calm
-  // teal. A revision that STILL exceeds the ceiling stays amber — honesty wins.
-  const resolved = decision && (decision.kind === "kept" || !isFlagging(decision.refreshed));
-  const cite = finding.citation ? ` [${finding.citation.title} — ${finding.citation.source}]` : "";
+// Section header with the in-place edit affordance.
+function SectionHeaderRow({
+  label,
+  marginTop,
+  onEdit,
+}: {
+  label: string;
+  marginTop?: number;
+  onEdit?: () => void;
+}) {
   return (
-    <span
-      title={finding.message + cite}
-      style={{
-        font: `600 10px/1 ${T.sans}`,
-        letterSpacing: ".02em",
-        color: resolved ? T.accentInk : T.amberInk,
-        background: resolved ? T.accentBg : T.amberBg,
-        border: `1px solid ${resolved ? T.accentLine : T.amberLine}`,
-        borderRadius: 6,
-        padding: "3px 7px",
-        cursor: "help",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {resolved ? "✓ dose reviewed" : "⚠ dose"}
-    </span>
+    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: `${marginTop ?? 0}px 0 7px` }}>
+      <div style={sectionLabel()}>{label}</div>
+      {onEdit && (
+        <button
+          onClick={onEdit}
+          style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          edit
+        </button>
+      )}
+    </div>
   );
 }
 
-// The accept/reject flow for a flagged dose. Two clinician actions, never a
-// suggested dose (the engine doesn't guess — a "Use 20 mg" button would be the
-// app prescribing, outside Non-Device CDS):
-//   • Revise dose… — the clinician types the corrected dose; the check re-runs
-//     against it and the banner clears only if it's genuinely within ceiling.
-//   • Keep as documented — acknowledged; recorded as their decision on export.
-function DoseBanner({
-  finding,
-  decision,
-  onDecide,
-  onRevise,
+// Plain-text editor for one section. Saving replaces the section's spans with
+// clinician-authored lines.
+function SectionEditor({
+  draft,
+  onDraft,
+  onSave,
+  onCancel,
 }: {
-  finding: DoseFinding;
-  decision?: DoseDecision;
-  onDecide: (d: DoseDecision | undefined) => void;
-  onRevise: (newDose: string) => Promise<DoseFinding>;
+  draft: string;
+  onDraft: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
 }) {
-  const [reviseOpen, setReviseOpen] = useState(false);
-  const [doseDraft, setDoseDraft] = useState("");
-  const [checking, setChecking] = useState(false);
-
-  async function saveRevision() {
-    const newDose = doseDraft.trim();
-    if (!newDose) return;
-    setChecking(true);
-    try {
-      const refreshed = await onRevise(newDose);
-      onDecide({ kind: "revised", newDose, refreshed });
-      setReviseOpen(false);
-      setDoseDraft("");
-    } finally {
-      setChecking(false);
-    }
-  }
-
-  const cite = finding.citation ? `${finding.citation.title} — ${finding.citation.source}` : null;
-
-  if (decision) {
-    const stillFlagged = decision.kind === "revised" && isFlagging(decision.refreshed);
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: 8,
-          padding: "9px 12px",
-          background: stillFlagged ? T.amberBg : T.accentBg2,
-          border: `1px solid ${stillFlagged ? T.amberLine : T.accentLine}`,
-          borderRadius: 10,
-          fontSize: 12,
-          lineHeight: 1.5,
-          color: stillFlagged ? T.amberInk : T.body,
-        }}
-      >
-        <span style={{ fontWeight: 700, color: stillFlagged ? T.amberInk : T.accentInk }}>{stillFlagged ? "⚠" : "✓"}</span>
-        <span style={{ flex: 1 }}>
-          {decision.kind === "kept" ? (
-            <>Reviewed — <b>kept as documented</b>.</>
-          ) : (
-            <>Revised to <b>&ldquo;{decision.newDose}&rdquo;</b> by you. {decision.refreshed.message}</>
-          )}
-        </span>
-        <button
-          onClick={() => onDecide(undefined)}
-          style={{ font: `500 10.5px/1 ${T.sans}`, color: stillFlagged ? T.amberInk : T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-        >
-          undo
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ padding: "11px 13px", background: T.amberBg, border: `1px solid ${T.amberLine}`, borderRadius: 10 }}>
-      <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-        <span style={{ color: T.amberInk, fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>⚠</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, color: T.amberInk, fontSize: 12.5 }}>Dose check · {finding.medication}</div>
-          <div style={{ fontSize: 12, color: T.amberInk, lineHeight: 1.5, marginTop: 2 }}>{finding.message}</div>
-          {cite && <div style={{ fontSize: 10.5, color: T.amberInk, opacity: 0.75, marginTop: 3 }}>{cite}</div>}
-          {reviseOpen ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
-              <input
-                value={doseDraft}
-                onChange={(e) => setDoseDraft(e.target.value)}
-                placeholder="e.g. 20 mg"
-                style={{ font: `400 12.5px/1.5 ${T.mono}`, color: T.ink, background: "#fff", border: `1px solid ${T.amberLine}`, borderRadius: 8, padding: "7px 10px", width: 110 }}
-              />
-              <button
-                onClick={saveRevision}
-                disabled={checking || doseDraft.trim().length === 0}
-                style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: doseDraft.trim() ? T.accent : T.faint, border: "none", borderRadius: 8, padding: "8px 13px", cursor: doseDraft.trim() && !checking ? "pointer" : "default" }}
-              >
-                {checking ? "Checking…" : "Save & re-check"}
-              </button>
-              <button
-                onClick={() => setReviseOpen(false)}
-                style={{ font: `600 12px/1 ${T.sans}`, color: T.amberInk, background: "none", border: `1px solid ${T.amberLine}`, borderRadius: 8, padding: "8px 11px", cursor: "pointer" }}
-              >
-                Cancel
-              </button>
-              <span style={{ fontSize: 10.5, color: T.amberInk, opacity: 0.8 }}>Your dose, your words — re-checked against the same reference.</span>
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 8, marginTop: 9 }}>
-              <button
-                onClick={() => setReviseOpen(true)}
-                style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: T.accent, border: "none", borderRadius: 8, padding: "8px 13px", cursor: "pointer" }}
-              >
-                Revise dose…
-              </button>
-              <button
-                onClick={() => onDecide({ kind: "kept" })}
-                style={{ font: `600 12px/1 ${T.sans}`, color: T.amberInk, background: "none", border: `1px solid ${T.amberLine}`, borderRadius: 8, padding: "8px 13px", cursor: "pointer" }}
-              >
-                Keep as documented
-              </button>
-            </div>
-          )}
-        </div>
+    <div style={{ padding: "11px 12px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
+      <textarea
+        value={draft}
+        onChange={(e) => onDraft(e.target.value)}
+        rows={Math.min(10, Math.max(3, draft.split("\n").length + 1))}
+        style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 13px/1.55 ${T.sans}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
+      />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+        <button
+          onClick={onSave}
+          style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: T.accent, border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}
+        >
+          Save
+        </button>
+        <button
+          onClick={onCancel}
+          style={{ font: `600 12px/1 ${T.sans}`, color: T.muted, background: "none", border: `1px solid ${T.line}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+        >
+          Cancel
+        </button>
+        <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>
+          Edited text becomes <b style={{ color: T.ink }}>your</b> words — provenance highlights are replaced by your authorship.
+        </span>
       </div>
     </div>
   );
@@ -264,6 +183,23 @@ export function NoteCard({
   // point can show its source lines even after the panel closes.
   const [summary, setSummary] = useState<{ result: TranscriptSummaryT; segments: TranscriptSegment[] } | null>(null);
   const [summarizing, setSummarizing] = useState(false);
+
+  // In-place section editing. Edited text becomes `clinician` spans — the
+  // doctor's words, no machine provenance, no confirm highlight — and any
+  // existing signature is invalidated because the note changed.
+  const [editingSection, setEditingSection] = useState<NoteHeading | null>(null);
+  const [sectionDraft, setSectionDraft] = useState("");
+
+  function openSectionEditor(heading: NoteHeading) {
+    setSectionDraft(sectionToText(note, heading));
+    setEditingSection(heading);
+  }
+  function saveSectionEdit() {
+    if (!editingSection) return;
+    setNote(withEditedSection(note, editingSection, sectionDraft));
+    setEditingSection(null);
+    invalidateSignature();
+  }
 
   async function summarize() {
     setSummarizing(true);
@@ -400,6 +336,7 @@ export function NoteCard({
     setText("");
     setError(null);
     setSummary(null);
+    setEditingSection(null);
     invalidateSignature();
   }
 
@@ -493,8 +430,10 @@ export function NoteCard({
 
       {summary && <SummaryCard summary={summary.result} segments={summary.segments} />}
 
-      <div style={{ ...sectionLabel(), marginBottom: 7 }}>Subjective</div>
-      {subjective.length === 0 ? (
+      <SectionHeaderRow label="Subjective" onEdit={() => openSectionEditor("subjective")} />
+      {editingSection === "subjective" ? (
+        <SectionEditor draft={sectionDraft} onDraft={setSectionDraft} onSave={saveSectionEdit} onCancel={() => setEditingSection(null)} />
+      ) : subjective.length === 0 ? (
         <p style={{ fontSize: 13.5, color: T.faint, margin: 0 }}>No history recorded for this encounter.</p>
       ) : (
         subjective.map((span, i) => (
@@ -571,8 +510,10 @@ export function NoteCard({
         </div>
       )}
 
-      <div style={{ ...sectionLabel(), margin: "18px 0 7px" }}>Assessment</div>
-      {assessment.length === 0 ? (
+      <SectionHeaderRow label="Assessment" marginTop={18} onEdit={() => openSectionEditor("assessment")} />
+      {editingSection === "assessment" ? (
+        <SectionEditor draft={sectionDraft} onDraft={setSectionDraft} onSave={saveSectionEdit} onCancel={() => setEditingSection(null)} />
+      ) : assessment.length === 0 ? (
         <div style={{ fontSize: 13.5, color: T.faint }}>No problems listed.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 7, fontSize: 13.5, color: T.body }}>
@@ -590,8 +531,10 @@ export function NoteCard({
         </div>
       )}
 
-      <div style={{ ...sectionLabel(), margin: "18px 0 7px" }}>Plan</div>
-      {plan.length === 0 ? (
+      <SectionHeaderRow label="Plan" marginTop={18} onEdit={() => openSectionEditor("plan")} />
+      {editingSection === "plan" ? (
+        <SectionEditor draft={sectionDraft} onDraft={setSectionDraft} onSave={saveSectionEdit} onCancel={() => setEditingSection(null)} />
+      ) : plan.length === 0 ? (
         <div style={{ fontSize: 13.5, color: T.faint }}>No medications on file.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13.5, color: T.body }}>

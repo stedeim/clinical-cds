@@ -81,7 +81,19 @@ async function modelNote(args: {
   if (!parsed.success) {
     throw new NoteContractError(parsed.error.message);
   }
-  return parsed.data;
+
+  // "clinician" provenance is reserved for text the signed-in clinician typed
+  // in the UI. A model claiming it is lying about authorship — downgrade such
+  // spans to what they really are: unattributed model text, i.e. inferred.
+  return {
+    ...parsed.data,
+    sections: parsed.data.sections.map((s) => ({
+      ...s,
+      spans: s.spans.map((span) =>
+        span.provenance === "clinician" ? { ...span, provenance: "inferred" as const } : span,
+      ),
+    })),
+  };
 }
 
 // Models may wrap JSON in prose or fences despite instructions; extract the
