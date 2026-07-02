@@ -3,6 +3,8 @@ import { NoteCard } from "@/components/encounter/NoteCard";
 import type { CaseRecord, Problem, Medication, Allergy, Vital, Lab } from "@/lib/types";
 import { generateNote } from "@/lib/note/engine";
 import { checkDoses } from "@/lib/dosecheck/engine";
+import { surfaceCheatSheets } from "@/lib/cheatsheet/engine";
+import type { CheatSheet } from "@/lib/cheatsheet/library";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 
 // Encounter screen — the synthesized "best of three" direction graduated onto
@@ -57,6 +59,34 @@ function sexInitial(sex?: string): string {
   return sex === "female" ? "F" : sex === "male" ? "M" : sex === "intersex" ? "I" : "";
 }
 
+// Auto-surfaced guideline card (Moat 4's unprompted half). Content comes from
+// the curated, cited library — never generated. Rendered only when a chart
+// problem actually matches a library topic; silence otherwise.
+function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
+  return (
+    <div style={{ background: T.card, borderRadius: 16, padding: "17px 18px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 11 }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent }} />
+        Auto-surfaced · {sheet.topic}
+      </div>
+      <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>{sheet.title}</div>
+      <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
+        {sheet.bullets.map((b, i) => (
+          <li key={i}>{b}</li>
+        ))}
+      </ul>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+        {sheet.sources.map((s) => (
+          <span key={s} style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
+            {s}
+          </span>
+        ))}
+        <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>cited from library</span>
+      </div>
+    </div>
+  );
+}
+
 function RailSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
     <div>
@@ -84,6 +114,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   // pasted transcript (grounding `spoken` spans) without a page reload.
   const note = await generateNote({ caseContext: record });
   const doseFindings = await checkDoses(encounter.medications);
+  const cheatSheets = surfaceCheatSheets(encounter.problems);
 
   // The signature must be honest: it carries the real signed-in clinician's name
   // and credential, not a hardcoded placeholder. In stub mode this is the demo
@@ -165,10 +196,16 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             clinicianCredential={clinician?.credential}
           />
 
-          {/* Q&A — the real, working engine, contextual to this patient */}
-          <div>
-            <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>
-            <QAPanel encounterId={encounter.id} />
+          {/* Auto-surfaced cheat-sheets (curated library, problem-matched) + the
+              Q&A engine, contextual to this patient */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {cheatSheets.map((sheet) => (
+              <CheatSheetCard key={sheet.id} sheet={sheet} />
+            ))}
+            <div>
+              <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>
+              <QAPanel encounterId={encounter.id} />
+            </div>
           </div>
         </div>
       </div>
