@@ -10,7 +10,14 @@ import type { DbAuditLog } from "./db/types";
 
 export interface AuditEvent {
   clinicianId: string;
-  action: "cds_query" | "note_generate" | "export_note" | "login" | "followup_create" | "reminder_send";
+  action:
+    | "cds_query"
+    | "note_generate"
+    | "summary_generate"
+    | "export_note"
+    | "login"
+    | "followup_create"
+    | "reminder_send";
   encounterId?: string;
   queryId?: string;
   detail?: Record<string, unknown>;

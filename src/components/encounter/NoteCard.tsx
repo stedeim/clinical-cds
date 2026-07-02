@@ -8,6 +8,8 @@ import { reviseDose, isFlagging, type DoseDecision } from "@/lib/dosecheck/decis
 import type { Medication } from "@/lib/types";
 import { serializeNote, noteFilename, type NoteSignature } from "@/lib/note/export";
 import { Dictation } from "@/components/encounter/Dictation";
+import { SummaryCard } from "@/components/encounter/SummaryCard";
+import type { TranscriptSummaryT } from "@/lib/summary/schema";
 
 // The Visit Note card — a client island so it can re-ground the note against a
 // pasted transcript without a full page reload.
@@ -258,6 +260,33 @@ export function NoteCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The "cut the fluff" summary. Kept with the segments it cites so hovering a
+  // point can show its source lines even after the panel closes.
+  const [summary, setSummary] = useState<{ result: TranscriptSummaryT; segments: TranscriptSegment[] } | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+
+  async function summarize() {
+    setSummarizing(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/summary", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ encounterId, transcriptText: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Could not summarize the transcript.");
+        return;
+      }
+      setSummary({ result: data.summary, segments: data.transcript ?? [] });
+    } catch {
+      setError("Network error — please retry.");
+    } finally {
+      setSummarizing(false);
+    }
+  }
+
   // Finishing flow (all client-side; no persistence until the DB lands).
   const [examText, setExamText] = useState(""); // clinician-authored exam findings
   const [examOpen, setExamOpen] = useState(false);
@@ -370,6 +399,7 @@ export function NoteCard({
     setSegments([]);
     setText("");
     setError(null);
+    setSummary(null);
     invalidateSignature();
   }
 
@@ -411,13 +441,20 @@ export function NoteCard({
             rows={5}
             style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 12.5px/1.5 ${T.mono}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
           />
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 9 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 9, flexWrap: "wrap" }}>
             <button
               onClick={ground}
               disabled={loading || text.trim().length === 0}
               style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: text.trim() ? T.accent : T.faint, border: "none", borderRadius: 8, padding: "8px 14px", cursor: text.trim() && !loading ? "pointer" : "default" }}
             >
               {loading ? "Grounding…" : "Ground note"}
+            </button>
+            <button
+              onClick={summarize}
+              disabled={summarizing || text.trim().length < 20}
+              style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: text.trim().length >= 20 && !summarizing ? "pointer" : "default", opacity: text.trim().length >= 20 ? 1 : 0.5 }}
+            >
+              {summarizing ? "Summarizing…" : "Summarize"}
             </button>
             <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>
               Only these text lines reach Pabaid — audio never does. Lines become <b style={{ color: T.accentInk }}>spoken</b> spans in the note.
@@ -429,7 +466,18 @@ export function NoteCard({
 
       {grounded && (
         <div style={{ marginBottom: 16, padding: "11px 13px", background: T.accentBg2, border: `1px solid ${T.accentLine}`, borderRadius: 12 }}>
-          <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk, marginBottom: 8 }}>Transcript</div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk }}>Transcript</div>
+            {!summary && (
+              <button
+                onClick={summarize}
+                disabled={summarizing}
+                style={{ font: `600 10.5px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 7, padding: "5px 9px", cursor: "pointer" }}
+              >
+                {summarizing ? "Summarizing…" : "Summarize — skip the fluff"}
+              </button>
+            )}
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {segments.map((seg) => (
               <div key={seg.id} style={{ fontSize: 12, lineHeight: 1.45, color: T.body }}>
@@ -442,6 +490,8 @@ export function NoteCard({
           </div>
         </div>
       )}
+
+      {summary && <SummaryCard summary={summary.result} segments={summary.segments} />}
 
       <div style={{ ...sectionLabel(), marginBottom: 7 }}>Subjective</div>
       {subjective.length === 0 ? (
