@@ -173,6 +173,18 @@ describe("serializeNote", () => {
     expect(out).not.toContain("DRAFT — not signed.");
   });
 
+  it("renders addenda AFTER the attestation — amend, never edit", () => {
+    const out = serializeNote(makeNote(), {
+      signature: { clinicianName: "Demo Clinician", credential: "MD", signedAt: "2026-07-01T15:00:00.000Z" },
+      addenda: [{ text: "Lab results returned after signing: K+ 4.1.", at: "2026-07-01T18:00:00.000Z" }],
+    });
+    const signedIdx = out.indexOf("Electronically signed by");
+    const addendumIdx = out.indexOf("ADDENDUM (2026-07-01T18:00:00.000Z):");
+    expect(signedIdx).toBeGreaterThan(-1);
+    expect(addendumIdx).toBeGreaterThan(signedIdx);
+    expect(out).toContain("Lab results returned after signing");
+  });
+
   it("notes when the source was a pasted transcript", () => {
     const out = serializeNote(makeNote({ transcriptId: "pasted" }));
     expect(out).toContain("Grounded in a pasted visit transcript.");

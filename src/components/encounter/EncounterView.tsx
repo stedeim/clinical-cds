@@ -14,7 +14,10 @@ import type { Handout } from "@/lib/medlineplus/handouts";
 import { checkAllergies, type AllergyWithSource } from "@/lib/allergy/engine";
 import { getPatientHistory } from "@/lib/store";
 import { listDocuments } from "@/lib/history/store";
+import { scanDocumentsForAllergies } from "@/lib/history/allergy-scan";
+import { reconcileMedications, vitalsTrends } from "@/lib/continuity/reconcile";
 import { HistoryDocs } from "@/components/encounter/HistoryDocs";
+import { AllergySuggestions } from "@/components/encounter/AllergySuggestions";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 import { detectFramework } from "@/lib/geo";
 import { suggestFollowUps } from "@/lib/followup/suggest";
@@ -273,6 +276,23 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
     text: d.text,
   }));
 
+  // Document scan: possible allergies mentioned in uploaded records that
+  // aren't on the record yet. Suggestions only — the clinician confirms.
+  const allergySuggestions = scanDocumentsForAllergies(
+    historyDocs,
+    allAllergies.map((a) => ({ substance: a.substance })),
+  );
+
+  // Visit-to-visit continuity: what changed since the last visit, and
+  // numeric vitals trends across all known visits.
+  const lastVisit = history[0];
+  const reconciliation = lastVisit
+    ? reconcileMedications(encounter.medications, lastVisit.encounter.medications)
+    : null;
+  const trends = vitalsTrends(
+    [{ date: encounter.occurredAt, vitals: encounter.vitals }, ...history.map((h) => ({ date: h.encounter.occurredAt, vitals: h.encounter.vitals }))],
+  );
+
   // Geo-detected default guideline framework (edge country header, then
   // Accept-Language). Only the select's initial value — manual override stays.
   const defaultFramework = detectFramework(await headers());
@@ -355,6 +375,76 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             />
             <RailSection title="Vitals" items={encounter.vitals.map((v: Vital) => `${v.name} ${v.value}`)} empty="None recorded" />
             <RailSection title="Labs" items={encounter.labs.map((l: Lab) => `${l.name} ${l.value ?? l.valueText ?? ""}`.trim())} empty="None recorded" />
+
+            {/* Document-scan allergy suggestions: proposed from uploaded
+                records with the source sentence; the clinician confirms. */}
+            <AllergySuggestions encounterId={encounter.id} suggestions={allergySuggestions} />
+
+            {/* Since last visit: medication reconciliation. */}
+            {reconciliation &&
+              (reconciliation.started.length > 0 || reconciliation.stopped.length > 0 || reconciliation.changed.length > 0) && (
+                <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
+                  <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
+                    Since last visit
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, lineHeight: 1.45, color: T.body }}>
+                    {reconciliation.started.map((m, i) => (
+                      <div key={`s${i}`}>
+                        <span style={{ font: `700 9px/1 ${T.mono}`, color: "#166534", background: "#dcfce7", borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STARTED</span>
+                        {[m.name, m.dose].filter(Boolean).join(" ")}
+                      </div>
+                    ))}
+                    {reconciliation.stopped.map((m, i) => (
+                      <div key={`x${i}`}>
+                        <span style={{ font: `700 9px/1 ${T.mono}`, color: "#8f2e24", background: "#fbedea", borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STOPPED</span>
+                        {[m.name, m.dose].filter(Boolean).join(" ")}
+                      </div>
+                    ))}
+                    {reconciliation.changed.map((c, i) => (
+                      <div key={`c${i}`}>
+                        <span style={{ font: `700 9px/1 ${T.mono}`, color: "#92400e", background: "#fef3c7", borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>CHANGED</span>
+                        {c.name}: {c.from} → {c.to}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* Vitals trends across visits (numeric series with ≥2 points). */}
+            {trends.length > 0 && (
+              <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
+                <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
+                  Trends
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  {trends.map((t) => {
+                    const values = t.points.map((p) => p.value);
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    const range = max - min || 1;
+                    const w = 72;
+                    const h = 18;
+                    const step = values.length > 1 ? w / (values.length - 1) : w;
+                    const path = values
+                      .map((v, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${(h - ((v - min) / range) * h).toFixed(1)}`)
+                      .join(" ");
+                    const rising = values[values.length - 1] > values[0];
+                    return (
+                      <div key={t.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+                        <span style={{ color: T.muted, width: 92, flexShrink: 0 }}>{t.name}</span>
+                        <svg width={w} height={h + 2} style={{ flexShrink: 0 }} aria-hidden>
+                          <path d={path} fill="none" stroke={T.accent} strokeWidth="1.5" />
+                        </svg>
+                        <span style={{ font: `500 10.5px ${T.mono}`, color: T.body }}>
+                          {values[0]} → {values[values.length - 1]}
+                          {t.unit ? ` ${t.unit}` : ""} {rising ? "↑" : values[values.length - 1] < values[0] ? "↓" : "→"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Patient continuity: prior visits (matched by external ref) and
                 uploaded history documents. */}

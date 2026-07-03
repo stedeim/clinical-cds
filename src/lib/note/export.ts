@@ -31,6 +31,9 @@ export interface SerializeOptions {
   // Clinician decisions on flagged findings, keyed by the finding's index in
   // `doseFindings`. A caution with no decision exports as unreviewed.
   doseDecisions?: Record<number, DoseDecision>;
+  // Post-signature amendments. A signed note is never edited — it is amended;
+  // addenda print AFTER the attestation, each with its own timestamp.
+  addenda?: { text: string; at: string }[];
 }
 
 const SECTION_ORDER = ["subjective", "objective", "assessment", "plan"] as const;
@@ -120,6 +123,13 @@ export function serializeNote(note: GeneratedNote, opts: SerializeOptions = {}):
     out.push(`Electronically signed by ${opts.signature.clinicianName}${cred} on ${opts.signature.signedAt}.`);
   } else {
     out.push("DRAFT — not signed.");
+  }
+
+  // Addenda follow the attestation — the signed content above is untouched.
+  for (const addendum of opts.addenda ?? []) {
+    out.push("");
+    out.push(`ADDENDUM (${addendum.at}):`);
+    out.push(addendum.text);
   }
 
   // Collapse any accidental blank runs, trim, single trailing newline.

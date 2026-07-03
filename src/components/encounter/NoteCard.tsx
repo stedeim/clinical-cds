@@ -124,6 +124,21 @@ export function NoteCard({
   const [signedAt, setSignedAt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Post-signature amendments. A signed note is never edited — sections lock
+  // and changes land as timestamped addenda AFTER the attestation. Addenda do
+  // not invalidate the signature: that is their entire purpose.
+  const [addenda, setAddenda] = useState<{ text: string; at: string }[]>([]);
+  const [addendumOpen, setAddendumOpen] = useState(false);
+  const [addendumDraft, setAddendumDraft] = useState("");
+
+  function saveAddendum() {
+    const text = addendumDraft.trim();
+    if (!text) return;
+    setAddenda((prev) => [...prev, { text, at: new Date().toISOString() }]);
+    setAddendumDraft("");
+    setAddendumOpen(false);
+  }
+
   // Clinician decisions on flagged dose findings, keyed by finding index.
   // A decision changes the exported note, so it invalidates any signature.
   const [doseDecisions, setDoseDecisions] = useState<Record<number, DoseDecision>>({});
@@ -150,7 +165,7 @@ export function NoteCard({
     : null;
 
   function buildExportText(): string {
-    return serializeNote(note, { examLines, signature, doseFindings, doseDecisions });
+    return serializeNote(note, { examLines, signature, doseFindings, doseDecisions, addenda });
   }
 
   async function copyNote() {
@@ -182,7 +197,7 @@ export function NoteCard({
       setError("Pop-up blocked — allow pop-ups to print.");
       return;
     }
-    w.document.write(buildPrintHtml(note, { examLines, signature, doseFindings, doseDecisions }));
+    w.document.write(buildPrintHtml(note, { examLines, signature, doseFindings, doseDecisions, addenda }));
     w.document.close();
     w.focus();
     w.print();
@@ -260,12 +275,14 @@ export function NoteCard({
             {grounded ? `Grounded in ${segments.length} transcript line${segments.length === 1 ? "" : "s"}` : "From chart data"}
             {note.model !== "mock" && <span style={{ color: T.faint }}> · {note.model}</span>}
           </div>
-          <button
-            onClick={() => (grounded ? reset() : setOpen((v) => !v))}
-            style={{ font: `600 11px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}
-          >
-            {grounded ? "Clear transcript" : open ? "Cancel" : "+ Add transcript"}
-          </button>
+          {!signedAt && (
+            <button
+              onClick={() => (grounded ? reset() : setOpen((v) => !v))}
+              style={{ font: `600 11px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}
+            >
+              {grounded ? "Clear transcript" : open ? "Cancel" : "+ Add transcript"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -292,7 +309,7 @@ export function NoteCard({
 
       {summary && <SummaryCard summary={summary.result} segments={summary.segments} />}
 
-      <SectionHeaderRow label="Subjective" onEdit={() => openSectionEditor("subjective")} />
+      <SectionHeaderRow label="Subjective" onEdit={signedAt ? undefined : () => openSectionEditor("subjective")} />
       {editingSection === "subjective" ? (
         <SectionEditor draft={sectionDraft} onDraft={setSectionDraft} onSave={saveSectionEdit} onCancel={() => setEditingSection(null)} />
       ) : subjective.length === 0 ? (
@@ -353,9 +370,11 @@ export function NoteCard({
             <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.muted }}>
               Physical exam · entered by you
             </div>
-            <button onClick={openExamEditor} style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-              edit
-            </button>
+            {!signedAt && (
+              <button onClick={openExamEditor} style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                edit
+              </button>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 13, lineHeight: 1.55, color: T.body }}>
             {examLines.map((line, i) => (
@@ -366,13 +385,15 @@ export function NoteCard({
       ) : (
         <div style={{ padding: "11px 14px", border: `1.5px dashed ${T.accentLine}`, borderRadius: 12, background: T.accentBg2, fontSize: 12.5, color: T.body, lineHeight: 1.5 }}>
           No exam findings were recorded this visit. Pabaid leaves the exam blank rather than inserting a normal template.{" "}
-          <button onClick={openExamEditor} style={{ color: T.accent, fontWeight: 700, background: "none", border: "none", padding: 0, cursor: "pointer", font: `700 12.5px/1.5 ${T.sans}` }}>
-            + Add exam
-          </button>
+          {!signedAt && (
+            <button onClick={openExamEditor} style={{ color: T.accent, fontWeight: 700, background: "none", border: "none", padding: 0, cursor: "pointer", font: `700 12.5px/1.5 ${T.sans}` }}>
+              + Add exam
+            </button>
+          )}
         </div>
       )}
 
-      <SectionHeaderRow label="Assessment" marginTop={18} onEdit={() => openSectionEditor("assessment")} />
+      <SectionHeaderRow label="Assessment" marginTop={18} onEdit={signedAt ? undefined : () => openSectionEditor("assessment")} />
       {editingSection === "assessment" ? (
         <SectionEditor draft={sectionDraft} onDraft={setSectionDraft} onSave={saveSectionEdit} onCancel={() => setEditingSection(null)} />
       ) : assessment.length === 0 ? (
@@ -393,7 +414,7 @@ export function NoteCard({
         </div>
       )}
 
-      <SectionHeaderRow label="Plan" marginTop={18} onEdit={() => openSectionEditor("plan")} />
+      <SectionHeaderRow label="Plan" marginTop={18} onEdit={signedAt ? undefined : () => openSectionEditor("plan")} />
       {editingSection === "plan" ? (
         <SectionEditor draft={sectionDraft} onDraft={setSectionDraft} onSave={saveSectionEdit} onCancel={() => setEditingSection(null)} />
       ) : plan.length === 0 ? (
@@ -444,16 +465,70 @@ export function NoteCard({
           amber = documented cross-reactivity. */}
       <AllergyAlerts findings={allergyFindings} />
 
-      {/* Finishing flow — sign / copy / download. Signing attests the note under
-          the clinician's name; any later edit (re-ground, clear, exam change)
-          invalidates the signature and reverts the note to DRAFT. */}
+      {/* Addenda — post-signature amendments, each timestamped, rendered and
+          exported AFTER the attestation. The signed content stays untouched. */}
+      {addenda.length > 0 && (
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+          {addenda.map((a, i) => (
+            <div key={i} style={{ padding: "10px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderLeft: `3px solid ${T.accent}`, borderRadius: 10 }}>
+              <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accentInk, marginBottom: 4 }}>
+                Addendum · {new Date(a.at).toLocaleString()}
+              </div>
+              <div style={{ fontSize: 13, lineHeight: 1.55, color: T.body, whiteSpace: "pre-wrap" }}>{a.text}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {addendumOpen && (
+        <div style={{ marginTop: 12, padding: "11px 12px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
+          <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 }}>
+            Add addendum — the signed note stays untouched
+          </div>
+          <textarea
+            value={addendumDraft}
+            onChange={(e) => setAddendumDraft(e.target.value)}
+            rows={3}
+            placeholder="e.g. Lab results returned after signing: K+ 4.1, Cr 0.9 — no dose change needed."
+            style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 13px/1.55 ${T.sans}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button
+              onClick={saveAddendum}
+              disabled={!addendumDraft.trim()}
+              style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: addendumDraft.trim() ? T.accent : T.faint, border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}
+            >
+              Add addendum
+            </button>
+            <button
+              onClick={() => setAddendumOpen(false)}
+              style={{ font: `600 12px/1 ${T.sans}`, color: T.muted, background: "none", border: `1px solid ${T.line}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Finishing flow — sign / copy / download / print. Signing attests the
+          note and LOCKS it: edit affordances disappear and changes become
+          addenda. Unsigning is only offered while no addendum exists. */}
       <div style={{ marginTop: 20, paddingTop: 14, borderTop: `1px solid ${T.line}`, display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
-        <button
-          onClick={toggleSign}
-          style={{ font: `600 12px/1 ${T.sans}`, color: signedAt ? T.accentInk : "#fff", background: signedAt ? T.accentBg : T.accent, border: signedAt ? `1px solid ${T.accentLine}` : "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}
-        >
-          {signedAt ? "Signed ✓ — unsign" : "Sign note"}
-        </button>
+        {!(signedAt && addenda.length > 0) && (
+          <button
+            onClick={toggleSign}
+            style={{ font: `600 12px/1 ${T.sans}`, color: signedAt ? T.accentInk : "#fff", background: signedAt ? T.accentBg : T.accent, border: signedAt ? `1px solid ${T.accentLine}` : "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}
+          >
+            {signedAt ? "Signed ✓ — unsign" : "Sign note"}
+          </button>
+        )}
+        {signedAt && !addendumOpen && (
+          <button
+            onClick={() => setAddendumOpen(true)}
+            style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+          >
+            + Addendum
+          </button>
+        )}
         <button
           onClick={copyNote}
           style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}

@@ -82,6 +82,21 @@ export function listCasesForPatient(patientId: string, excludeEncounterId?: stri
     .sort((a, b) => b.encounter.occurredAt.localeCompare(a.encounter.occurredAt));
 }
 
+// Clinician-confirmed allergy addition (the document-scan confirm flow).
+// Appends to the encounter's allergy list; dedupes case-insensitively.
+export function addAllergy(encounterId: string, substance: string): CaseRecord | undefined {
+  const record = cases.get(encounterId);
+  if (!record) return undefined;
+  const exists = record.encounter.allergies.some(
+    (a) => a.substance.toLowerCase() === substance.toLowerCase(),
+  );
+  if (!exists) {
+    record.encounter.allergies.push({ substance });
+    record.updatedAt = new Date().toISOString();
+  }
+  return record;
+}
+
 export function saveCase(record: CaseContext): CaseRecord {
   // Returning patient? Reuse the identity; keep the freshest demographics.
   const existing = record.patient.externalRef ? findPatientByRef(record.patient.externalRef) : undefined;

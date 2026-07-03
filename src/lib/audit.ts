@@ -19,7 +19,8 @@ export interface AuditEvent {
     | "verification_check"
     | "followup_create"
     | "reminder_send"
-    | "history_doc_upload";
+    | "history_doc_upload"
+    | "allergy_add";
   encounterId?: string;
   queryId?: string;
   detail?: Record<string, unknown>;

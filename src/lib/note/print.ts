@@ -83,6 +83,12 @@ export function buildPrintHtml(note: GeneratedNote, opts: SerializeOptions = {})
   const foot = signature
     ? `<p class="signed">Electronically signed by <b>${escapeHtml(signature.clinicianName)}${signature.credential ? ", " + escapeHtml(signature.credential) : ""}</b> on ${escapeHtml(signature.signedAt)}.</p>`
     : `<p class="draftline">DRAFT — not signed.</p>`;
+  const addenda = (opts.addenda ?? [])
+    .map(
+      (a) =>
+        `<section class="addendum"><h2>Addendum · ${escapeHtml(a.at)}</h2><p>${escapeHtml(a.text)}</p></section>`,
+    )
+    .join("");
   const watermark = signature ? "" : `<div class="watermark">DRAFT</div>`;
 
   return `<!doctype html>
@@ -117,6 +123,7 @@ ${watermark}
 ${sections}
 ${cautions}
 ${foot}
+${addenda}
 </body>
 </html>`;
 }
