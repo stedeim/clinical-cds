@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { CSSProperties } from "react";
 import type { GeneratedNote, NoteSpan, NoteSection, NoteHeading, TranscriptSegment } from "@/lib/note/schema";
 import type { DoseFinding } from "@/lib/dosecheck/schema";
 import { reviseDose, isFlagging, type DoseDecision } from "@/lib/dosecheck/decisions";
@@ -9,7 +8,8 @@ import type { Medication } from "@/lib/types";
 import { serializeNote, noteFilename, type NoteSignature } from "@/lib/note/export";
 import { buildPrintHtml } from "@/lib/note/print";
 import { sectionToText, withEditedSection } from "@/lib/note/edit";
-import { Dictation } from "@/components/encounter/Dictation";
+import { TranscriptInput, GroundedTranscript } from "@/components/encounter/TranscriptPanel";
+import { sectionLabel, CodeChip, SpanText, SectionHeaderRow, SectionEditor } from "@/components/encounter/NoteSections";
 import { SummaryCard } from "@/components/encounter/SummaryCard";
 import { DoseChip, DoseBanner } from "@/components/encounter/DoseReview";
 import type { TranscriptSummaryT } from "@/lib/summary/schema";
@@ -46,117 +46,6 @@ const T = {
   mono: "'IBM Plex Mono',ui-monospace,monospace",
 };
 const cardShadow = "0 6px 22px -14px rgba(15,43,49,.32)";
-
-function sectionLabel(): CSSProperties {
-  return { font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".12em", textTransform: "uppercase", color: T.accent };
-}
-
-function CodeChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span style={{ font: `600 11px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 5, padding: "3px 7px" }}>
-      {children}
-    </span>
-  );
-}
-
-function spanStyle(provenance: NoteSpan["provenance"]): CSSProperties {
-  if (provenance === "inferred") {
-    return { background: T.amberBg, color: T.amberInk, borderRadius: 4, padding: "0 4px", boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" };
-  }
-  if (provenance === "spoken") {
-    return { boxShadow: `inset 0 -0.6em 0 ${T.accentBg}`, borderBottom: `1.5px solid ${T.accentLine}` };
-  }
-  return {};
-}
-
-function spanTitle(provenance: NoteSpan["provenance"]): string | undefined {
-  if (provenance === "inferred") return "Inferred by Pabaid — please confirm against the visit.";
-  if (provenance === "spoken") return "Spoken — grounded in the visit transcript.";
-  if (provenance === "clinician") return "Written by you.";
-  return undefined;
-}
-
-function SpanText({ span }: { span: NoteSpan }) {
-  return (
-    <span style={spanStyle(span.provenance)} title={spanTitle(span.provenance)}>
-      {span.text}
-    </span>
-  );
-}
-
-// Section header with the in-place edit affordance.
-function SectionHeaderRow({
-  label,
-  marginTop,
-  onEdit,
-}: {
-  label: string;
-  marginTop?: number;
-  onEdit?: () => void;
-}) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: `${marginTop ?? 0}px 0 7px` }}>
-      <div style={sectionLabel()}>{label}</div>
-      {onEdit && (
-        <button
-          onClick={onEdit}
-          style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-        >
-          edit
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Plain-text editor for one section. Saving replaces the section's spans with
-// clinician-authored lines.
-function SectionEditor({
-  draft,
-  onDraft,
-  onSave,
-  onCancel,
-}: {
-  draft: string;
-  onDraft: (v: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div style={{ padding: "11px 12px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
-      <textarea
-        value={draft}
-        onChange={(e) => onDraft(e.target.value)}
-        rows={Math.min(10, Math.max(3, draft.split("\n").length + 1))}
-        style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 13px/1.55 ${T.sans}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
-      />
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-        <button
-          onClick={onSave}
-          style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: T.accent, border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}
-        >
-          Save
-        </button>
-        <button
-          onClick={onCancel}
-          style={{ font: `600 12px/1 ${T.sans}`, color: T.muted, background: "none", border: `1px solid ${T.line}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
-        >
-          Cancel
-        </button>
-        <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>
-          Edited text becomes <b style={{ color: T.ink }}>your</b> words — provenance highlights are replaced by your authorship.
-        </span>
-      </div>
-    </div>
-  );
-}
-
-const DEMO_TRANSCRIPT = [
-  "PT: The cough started about five days ago, mostly at night.",
-  "PT: No fever that I've noticed, but I get winded on the stairs now.",
-  "DR: Any chest pain or coughing up blood?",
-  "PT: No blood. A little tightness, not really pain.",
-].join("\n");
 
 export function NoteCard({
   encounterId,
@@ -377,71 +266,24 @@ export function NoteCard({
       </div>
 
       {open && !grounded && (
-        <div style={{ marginBottom: 16, padding: "12px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 7 }}>
-            <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>Dictate or paste visit transcript</div>
-            <button onClick={() => setText(DEMO_TRANSCRIPT)} style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-              use sample
-            </button>
-          </div>
-          {/* Voice dictation appends finalized DR:/PT: lines to the same textarea
-              the paste flow uses — one pipeline into the grounding engine. */}
-          <Dictation onSegment={(line) => setText((prev) => (prev ? prev.replace(/\n?$/, "\n") : "") + line)} />
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={"DR: What brings you in today?\nPT: I've had a cough for about a week..."}
-            rows={5}
-            style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 12.5px/1.5 ${T.mono}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
-          />
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 9, flexWrap: "wrap" }}>
-            <button
-              onClick={ground}
-              disabled={loading || text.trim().length === 0}
-              style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: text.trim() ? T.accent : T.faint, border: "none", borderRadius: 8, padding: "8px 14px", cursor: text.trim() && !loading ? "pointer" : "default" }}
-            >
-              {loading ? "Grounding…" : "Ground note"}
-            </button>
-            <button
-              onClick={summarize}
-              disabled={summarizing || text.trim().length < 20}
-              style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: text.trim().length >= 20 && !summarizing ? "pointer" : "default", opacity: text.trim().length >= 20 ? 1 : 0.5 }}
-            >
-              {summarizing ? "Summarizing…" : "Summarize"}
-            </button>
-            <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>
-              Only these text lines reach Pabaid — audio never does. Lines become <b style={{ color: T.accentInk }}>spoken</b> spans in the note.
-            </span>
-          </div>
-          {error && <div style={{ marginTop: 8, fontSize: 11.5, color: T.amberInk }}>{error}</div>}
-        </div>
+        <TranscriptInput
+          text={text}
+          onText={setText}
+          loading={loading}
+          summarizing={summarizing}
+          onGround={ground}
+          onSummarize={summarize}
+          error={error}
+        />
       )}
 
       {grounded && (
-        <div style={{ marginBottom: 16, padding: "11px 13px", background: T.accentBg2, border: `1px solid ${T.accentLine}`, borderRadius: 12 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk }}>Transcript</div>
-            {!summary && (
-              <button
-                onClick={summarize}
-                disabled={summarizing}
-                style={{ font: `600 10.5px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 7, padding: "5px 9px", cursor: "pointer" }}
-              >
-                {summarizing ? "Summarizing…" : "Summarize — skip the fluff"}
-              </button>
-            )}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            {segments.map((seg) => (
-              <div key={seg.id} style={{ fontSize: 12, lineHeight: 1.45, color: T.body }}>
-                <span style={{ font: `600 10px/1 ${T.sans}`, textTransform: "uppercase", letterSpacing: ".05em", color: seg.speaker === "patient" ? T.accent : T.muted, marginRight: 6 }}>
-                  {seg.speaker === "clinician" ? "Dr" : seg.speaker === "patient" ? "Pt" : "—"}
-                </span>
-                {seg.text}
-              </div>
-            ))}
-          </div>
-        </div>
+        <GroundedTranscript
+          segments={segments}
+          showSummarize={!summary}
+          summarizing={summarizing}
+          onSummarize={summarize}
+        />
       )}
 
       {summary && <SummaryCard summary={summary.result} segments={summary.segments} />}

@@ -3,6 +3,7 @@ import { getServerUser } from "@/lib/server-user";
 import { listOpenFollowUps } from "@/lib/followup/store";
 import { dueStatus } from "@/lib/followup/due";
 import { FollowUpDashboard, type DashboardItem } from "@/components/followup/FollowUpDashboard";
+import { CaseList, type CaseRow } from "@/components/cases/CaseList";
 import type { Problem } from "@/lib/types";
 
 // Case list — entry point. Server Component: reads the data layer on the server.
@@ -52,33 +53,19 @@ export default async function HomePage() {
 
       <FollowUpDashboard items={followUpItems} />
 
-      <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-        {cases.map((c) => (
-          <li key={c.encounter.id}>
-            <a
-              href={`/cases/${c.encounter.id}`}
-              className="flex items-center justify-between px-5 py-4 hover:bg-slate-50"
-            >
-              <div>
-                <p className="font-medium text-ink">
-                  {c.patient.ageYears}
-                  {c.patient.sex === "female" ? "F" : c.patient.sex === "male" ? "M" : ""} ·{" "}
-                  {c.encounter.chiefComplaint ?? "No chief complaint"}
-                </p>
-                <p className="mt-0.5 text-sm text-slate-500">
-                  {c.encounter.problems.map((p: Problem) => p.label).join(", ") || "No problems listed"}
-                  {c.patient.isTestCase && (
-                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-caution">
-                      test case
-                    </span>
-                  )}
-                </p>
-              </div>
-              <span className="text-clinical">Open →</span>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <CaseList
+        cases={cases.map(
+          (c): CaseRow => ({
+            encounterId: c.encounter.id,
+            patientLabel: `${c.patient.ageYears ?? "—"}${c.patient.sex === "female" ? "F" : c.patient.sex === "male" ? "M" : ""}`,
+            chiefComplaint: c.encounter.chiefComplaint ?? "",
+            problems: c.encounter.problems.map((p: Problem) => p.label).join(", "),
+            externalRef: c.patient.externalRef,
+            isTestCase: c.patient.isTestCase ?? false,
+            updatedAt: c.updatedAt,
+          }),
+        )}
+      />
 
       <p className="text-xs text-slate-400">
         Stub mode: one seeded demo case. With Supabase configured, this lists the
