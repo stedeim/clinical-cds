@@ -55,9 +55,9 @@ describe("history documents store", () => {
   beforeEach(() => _resetPatientDocs());
 
   it("stores and lists per patient + clinician, text capped", () => {
-    createDocument({ patientId: "p1", clinicianId: "c1", filename: "old.txt", format: "txt", text: "old history" });
-    createDocument({ patientId: "p1", clinicianId: "c1", filename: "big.pdf", format: "pdf", text: "x".repeat(MAX_TEXT_CHARS + 500) });
-    createDocument({ patientId: "p1", clinicianId: "c2", filename: "other-doc.txt", format: "txt", text: "not yours" });
+    createDocument({ patientId: "p1", clinicianId: "c1", filename: "old.txt", format: "txt", text: "old history", ocr: false });
+    createDocument({ patientId: "p1", clinicianId: "c1", filename: "big.pdf", format: "pdf", text: "x".repeat(MAX_TEXT_CHARS + 500), ocr: true });
+    createDocument({ patientId: "p1", clinicianId: "c2", filename: "other-doc.txt", format: "txt", text: "not yours", ocr: false });
 
     const docs = listDocuments("p1", "c1");
     expect(docs.map((d) => d.filename).sort()).toEqual(["big.pdf", "old.txt"]);

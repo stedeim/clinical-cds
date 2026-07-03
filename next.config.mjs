@@ -27,7 +27,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Document parsers run as plain Node modules — webpack-bundling pdfjs (inside
   // pdf-parse) breaks with "Object.defineProperty called on non-object".
-  serverExternalPackages: ["pdf-parse", "mammoth"],
+  serverExternalPackages: ["pdf-parse", "mammoth", "tesseract.js"],
   // PHI never belongs in the client bundle. Server Components + route handlers
   // keep case data and the LLM call on the server by default.
   experimental: {

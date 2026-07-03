@@ -13,6 +13,9 @@ export interface PatientDocument {
   filename: string;
   format: "txt" | "docx" | "pdf";
   text: string; // extracted, capped
+  // True when the text came from OCR of a scanned document — best-effort
+  // recognition, labeled as such in the UI.
+  ocr: boolean;
   uploadedAt: string;
 }
 

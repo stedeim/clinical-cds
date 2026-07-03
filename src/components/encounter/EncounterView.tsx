@@ -268,6 +268,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
     id: d.id,
     filename: d.filename,
     format: d.format,
+    ocr: d.ocr,
     uploadedAt: d.uploadedAt,
     text: d.text,
   }));

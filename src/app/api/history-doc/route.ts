@@ -68,8 +68,11 @@ export async function POST(req: Request) {
   }
 
   let text: string;
+  let ocrUsed: boolean;
   try {
-    text = (await extractText(format, Buffer.from(await file.arrayBuffer()))).trim();
+    const extracted = await extractText(format, Buffer.from(await file.arrayBuffer()));
+    text = extracted.text.trim();
+    ocrUsed = extracted.ocrUsed;
   } catch (err) {
     console.error("[history-doc] extraction failed", err);
     return NextResponse.json(
@@ -79,7 +82,7 @@ export async function POST(req: Request) {
   }
   if (!text) {
     return NextResponse.json(
-      { error: "No readable text found in the document (scanned PDFs need OCR, which isn't supported yet)." },
+      { error: "No readable text found in the document, even after OCR." },
       { status: 422 },
     );
   }
@@ -90,13 +93,14 @@ export async function POST(req: Request) {
     filename: file.name,
     format,
     text,
+    ocr: ocrUsed,
   });
 
   await recordAudit({
     clinicianId,
     action: "history_doc_upload",
     encounterId,
-    detail: { documentId: doc.id, format, chars: doc.text.length },
+    detail: { documentId: doc.id, format, ocr: ocrUsed, chars: doc.text.length },
   });
 
   // Return without the full text body; the UI refetches what it needs.

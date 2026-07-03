@@ -20,7 +20,7 @@ const T = {
   mono: "'IBM Plex Mono',ui-monospace,monospace",
 };
 
-type DocRow = Pick<PatientDocument, "id" | "filename" | "format" | "uploadedAt" | "text">;
+type DocRow = Pick<PatientDocument, "id" | "filename" | "format" | "ocr" | "uploadedAt" | "text">;
 
 export function HistoryDocs({
   encounterId,
@@ -95,6 +95,14 @@ export function HistoryDocs({
                 style={{ display: "flex", alignItems: "baseline", gap: 6, width: "100%", textAlign: "left", fontSize: 11.5, color: T.body, background: "none", border: "none", padding: 0, cursor: "pointer" }}
               >
                 <span style={{ font: `600 9px/1 ${T.mono}`, color: T.accent, textTransform: "uppercase" }}>{d.format}</span>
+                {d.ocr && (
+                  <span
+                    title="Text recognized from a scanned document (OCR) — best-effort, verify against the original."
+                    style={{ font: `600 8.5px/1 ${T.mono}`, color: T.amberInk, background: "#fef3c7", borderRadius: 3, padding: "2px 4px", cursor: "help" }}
+                  >
+                    OCR
+                  </span>
+                )}
                 <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.filename}</span>
                 <span style={{ color: T.faint, fontSize: 10 }}>{d.uploadedAt.slice(0, 10)}</span>
               </button>
