@@ -63,8 +63,36 @@ export function getCase(encounterId: string): CaseRecord | undefined {
   return cases.get(encounterId);
 }
 
+// Patient continuity: the clinician-chosen external ref is the returning-
+// patient key. A new case whose ref matches an existing patient reuses that
+// patient's id, so visit history and prior allergies attach automatically.
+export function findPatientByRef(externalRef: string): CaseRecord["patient"] | undefined {
+  const ref = externalRef.trim().toLowerCase();
+  if (!ref) return undefined;
+  for (const record of cases.values()) {
+    if (record.patient.externalRef?.trim().toLowerCase() === ref) return record.patient;
+  }
+  return undefined;
+}
+
+// A patient's other visits, most recent first.
+export function listCasesForPatient(patientId: string, excludeEncounterId?: string): CaseRecord[] {
+  return [...cases.values()]
+    .filter((r) => r.patient.id === patientId && r.encounter.id !== excludeEncounterId)
+    .sort((a, b) => b.encounter.occurredAt.localeCompare(a.encounter.occurredAt));
+}
+
 export function saveCase(record: CaseContext): CaseRecord {
-  const stored: CaseRecord = { ...record, updatedAt: new Date().toISOString() };
+  // Returning patient? Reuse the identity; keep the freshest demographics.
+  const existing = record.patient.externalRef ? findPatientByRef(record.patient.externalRef) : undefined;
+  const patient = existing ? { ...record.patient, id: existing.id } : record.patient;
+
+  const stored: CaseRecord = {
+    ...record,
+    patient,
+    encounter: { ...record.encounter, patientId: patient.id },
+    updatedAt: new Date().toISOString(),
+  };
   cases.set(record.encounter.id, stored);
   return stored;
 }

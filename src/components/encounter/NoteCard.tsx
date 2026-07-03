@@ -9,6 +9,8 @@ import { serializeNote, noteFilename, type NoteSignature } from "@/lib/note/expo
 import { buildPrintHtml } from "@/lib/note/print";
 import { sectionToText, withEditedSection } from "@/lib/note/edit";
 import { TranscriptInput, GroundedTranscript } from "@/components/encounter/TranscriptPanel";
+import { AllergyAlerts } from "@/components/encounter/AllergyAlerts";
+import type { AllergyFindingT } from "@/lib/allergy/engine";
 import { sectionLabel, CodeChip, SpanText, SectionHeaderRow, SectionEditor } from "@/components/encounter/NoteSections";
 import { SummaryCard } from "@/components/encounter/SummaryCard";
 import { DoseChip, DoseBanner } from "@/components/encounter/DoseReview";
@@ -51,6 +53,7 @@ export function NoteCard({
   encounterId,
   initialNote,
   doseFindings,
+  allergyFindings = [],
   medications,
   clinicianName,
   clinicianCredential,
@@ -58,6 +61,7 @@ export function NoteCard({
   encounterId: string;
   initialNote: GeneratedNote;
   doseFindings: DoseFinding[];
+  allergyFindings?: AllergyFindingT[];
   medications: Medication[];
   clinicianName?: string;
   clinicianCredential?: string;
@@ -434,6 +438,11 @@ export function NoteCard({
           )}
         </div>
       )}
+
+      {/* Allergy conflicts — recorded allergies (this visit AND prior visits)
+          against the charted medications. Red = direct/class conflict,
+          amber = documented cross-reactivity. */}
+      <AllergyAlerts findings={allergyFindings} />
 
       {/* Finishing flow — sign / copy / download. Signing attests the note under
           the clinician's name; any later edit (re-ground, clear, exam change)

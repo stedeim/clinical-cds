@@ -67,3 +67,15 @@ export async function saveCase(
   }
   return memoryStore.saveCase(record);
 }
+
+// A patient's prior visits (excluding the current one), most recent first.
+// Stub mode: keyed by the external-ref continuity in memory-store. Supabase
+// mode: returns [] until db/cases grows a patient-history query — an honest
+// gap, not a fake history.
+export async function getPatientHistory(
+  patientId: string,
+  excludeEncounterId: string,
+): Promise<CaseRecord[]> {
+  if (isSupabaseConfigured()) return [];
+  return memoryStore.listCasesForPatient(patientId, excludeEncounterId);
+}

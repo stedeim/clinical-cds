@@ -11,6 +11,10 @@ import { checkBoxedWarnings } from "@/lib/fda/boxed-warnings";
 import type { BoxedWarningResult } from "@/lib/fda/boxed-warnings";
 import { getHandouts } from "@/lib/medlineplus/handouts";
 import type { Handout } from "@/lib/medlineplus/handouts";
+import { checkAllergies, type AllergyWithSource } from "@/lib/allergy/engine";
+import { getPatientHistory } from "@/lib/store";
+import { listDocuments } from "@/lib/history/store";
+import { HistoryDocs } from "@/components/encounter/HistoryDocs";
 import { getCurrentClinician, currentUserIdFromCookies } from "@/lib/clinician";
 import { detectFramework } from "@/lib/geo";
 import { suggestFollowUps } from "@/lib/followup/suggest";
@@ -241,10 +245,32 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
   // Patient education pages for the chart's coded problems (cached 24h).
   const handouts = await getHandouts(encounter.problems);
 
+  // Patient continuity: prior visits (matched by external ref), the allergy
+  // history they carry, and any uploaded history documents. Allergies from
+  // past visits join this visit's in the conflict check, each tagged with
+  // where the record came from.
+  const history = await getPatientHistory(patient.id, encounter.id);
+  const allAllergies: AllergyWithSource[] = [
+    ...encounter.allergies.map((a) => ({ ...a, source: "this visit" })),
+    ...history.flatMap((h) =>
+      h.encounter.allergies.map((a) => ({ ...a, source: `visit of ${h.encounter.occurredAt.slice(0, 10)}` })),
+    ),
+  ];
+  const allergyFindings = checkAllergies(encounter.medications, allAllergies);
+
   // The signature must be honest: it carries the real signed-in clinician's name
   // and credential, not a hardcoded placeholder. In stub mode this is the demo
   // clinician; with Supabase it's the verified account row.
   const clinician = await getCurrentClinician(await currentUserIdFromCookies());
+
+  // Uploaded history documents for this patient (stub store until Supabase).
+  const historyDocs = listDocuments(patient.id, clinician?.id ?? "demo-clinician").map((d) => ({
+    id: d.id,
+    filename: d.filename,
+    format: d.format,
+    uploadedAt: d.uploadedAt,
+    text: d.text,
+  }));
 
   // Geo-detected default guideline framework (edge country header, then
   // Accept-Language). Only the select's initial value — manual override stays.
@@ -312,9 +338,48 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent }}>Chart</div>
             <RailSection title="Problems" items={encounter.problems.map((p: Problem) => [p.label, p.code].filter(Boolean).join(" · "))} empty="None listed" />
             <MedicationsRail medications={encounter.medications} warnings={boxedWarnings} />
-            <RailSection title="Allergies" items={encounter.allergies.map((a: Allergy) => a.substance)} empty="NKDA" />
+            <RailSection
+              title="Allergies"
+              items={[
+                ...encounter.allergies.map((a: Allergy) => a.substance),
+                // Allergies known from prior visits, tagged with their source —
+                // history the conflict check already accounts for.
+                ...allAllergies
+                  .filter((a) => a.source !== "this visit")
+                  .filter((a, i, arr) => arr.findIndex((x) => x.substance === a.substance) === i)
+                  .filter((a) => !encounter.allergies.some((cur) => cur.substance.toLowerCase() === a.substance.toLowerCase()))
+                  .map((a) => `${a.substance} (${a.source})`),
+              ]}
+              empty="NKDA"
+            />
             <RailSection title="Vitals" items={encounter.vitals.map((v: Vital) => `${v.name} ${v.value}`)} empty="None recorded" />
             <RailSection title="Labs" items={encounter.labs.map((l: Lab) => `${l.name} ${l.value ?? l.valueText ?? ""}`.trim())} empty="None recorded" />
+
+            {/* Patient continuity: prior visits (matched by external ref) and
+                uploaded history documents. */}
+            {history.length > 0 && (
+              <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
+                <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
+                  Previous visits
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  {history.map((h) => (
+                    <a
+                      key={h.encounter.id}
+                      href={`/cases/${h.encounter.id}`}
+                      style={{ fontSize: 11.5, lineHeight: 1.45, color: T.accentInk, textDecoration: "none" }}
+                    >
+                      <span style={{ font: `500 10px/1 ${T.mono}`, color: T.muted, marginRight: 6 }}>
+                        {h.encounter.occurredAt.slice(0, 10)}
+                      </span>
+                      <span style={{ textDecoration: "underline" }}>{h.encounter.chiefComplaint ?? "visit"}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <HistoryDocs encounterId={encounter.id} initialDocuments={historyDocs} />
 
             {/* True ambient capture (passive, diarized) isn't built. Push-button
                 dictation IS: the note's "+ Add transcript" panel has a mic that
@@ -333,6 +398,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
               encounterId={encounter.id}
               initialNote={note}
               doseFindings={doseFindings}
+              allergyFindings={allergyFindings}
               medications={encounter.medications}
               clinicianName={clinician?.fullName}
               clinicianCredential={clinician?.credential}

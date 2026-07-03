@@ -18,7 +18,8 @@ export interface AuditEvent {
     | "login"
     | "verification_check"
     | "followup_create"
-    | "reminder_send";
+    | "reminder_send"
+    | "history_doc_upload";
   encounterId?: string;
   queryId?: string;
   detail?: Record<string, unknown>;

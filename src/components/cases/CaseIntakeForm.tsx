@@ -79,7 +79,12 @@ export function CaseIntakeForm() {
       <h2 className="font-semibold">New case</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="External ref" value={form.externalRef} onChange={(v) => update("externalRef", v)} />
+        <div>
+          <Field label="External ref" value={form.externalRef} onChange={(v) => update("externalRef", v)} />
+          <p className="mt-1 text-xs text-slate-500">
+            Reuse the same ref for a returning patient — visit history and known allergies link automatically.
+          </p>
+        </div>
         <Field label="Age" type="number" value={form.ageYears} onChange={(v) => update("ageYears", v)} />
       </div>
 
