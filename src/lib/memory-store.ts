@@ -39,7 +39,12 @@ const seedEncounter: CaseContext["encounter"] = {
   ],
 };
 
-const cases = new Map<string, CaseRecord>([
+// Anchored on globalThis: in `next dev`, route handlers and server components
+// can end up with separate instances of this module across recompiles, which
+// would silently fork/reset a plain module-level Map (created cases 404ing on
+// the very next page view). One process, one store; seeded once.
+const g = globalThis as unknown as { __pabaidCases?: Map<string, CaseRecord> };
+const cases = (g.__pabaidCases ??= new Map<string, CaseRecord>([
   [
     seedEncounter.id,
     {
@@ -48,7 +53,7 @@ const cases = new Map<string, CaseRecord>([
       updatedAt: seedEncounter.occurredAt,
     },
   ],
-]);
+]));
 
 export function listCases(): CaseRecord[] {
   return [...cases.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

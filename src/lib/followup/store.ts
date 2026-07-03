@@ -8,7 +8,11 @@ import type { FollowUp, FollowUpCreateT, FollowUpStatusT } from "./schema";
 // (table + RLS ship in supabase/migrations/0004_follow_ups.sql) — same seam
 // store.ts uses for cases.
 
-const followUps = new Map<string, FollowUp>();
+// Anchored on globalThis: in `next dev`, route handlers and server components
+// can end up with separate instances of this module across recompiles, which
+// would silently fork/reset a plain module-level Map. One process, one store.
+const g = globalThis as unknown as { __pabaidFollowUps?: Map<string, FollowUp> };
+const followUps = (g.__pabaidFollowUps ??= new Map<string, FollowUp>());
 
 export function createFollowUp(input: FollowUpCreateT, clinicianId: string): FollowUp {
   const item: FollowUp = {
@@ -28,6 +32,15 @@ export function createFollowUp(input: FollowUpCreateT, clinicianId: string): Fol
 export function listFollowUps(encounterId: string, clinicianId: string): FollowUp[] {
   return [...followUps.values()]
     .filter((f) => f.encounterId === encounterId && f.clinicianId === clinicianId)
+    .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+}
+
+// All of a clinician's open follow-ups across cases — the dashboard's feed.
+// "Open" = pending or sent (a sent reminder still awaits the report-back);
+// completed/cancelled items leave the list.
+export function listOpenFollowUps(clinicianId: string): FollowUp[] {
+  return [...followUps.values()]
+    .filter((f) => f.clinicianId === clinicianId && (f.status === "pending" || f.status === "sent"))
     .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
 }
 

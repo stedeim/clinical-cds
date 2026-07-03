@@ -1,11 +1,35 @@
 import { listCases } from "@/lib/store";
 import { getServerUser } from "@/lib/server-user";
+import { listOpenFollowUps } from "@/lib/followup/store";
+import { dueStatus } from "@/lib/followup/due";
+import { FollowUpDashboard, type DashboardItem } from "@/components/followup/FollowUpDashboard";
 import type { Problem } from "@/lib/types";
 
 // Case list — entry point. Server Component: reads the data layer on the server.
 export default async function HomePage() {
   const user = await getServerUser();
   const cases = await listCases(user?.id);
+
+  // Cross-case follow-up feed: every open item, worst first. Case labels come
+  // from the already-loaded case list; a follow-up whose case is gone (stub
+  // store reset) is dropped rather than shown as an orphan.
+  const now = new Date();
+  const caseById = new Map(cases.map((c) => [c.encounter.id, c]));
+  const followUpItems: DashboardItem[] = (user ? listOpenFollowUps(user.id) : [])
+    .filter((f) => caseById.has(f.encounterId))
+    .map((f) => {
+      const c = caseById.get(f.encounterId)!;
+      const sex = c.patient.sex === "female" ? "F" : c.patient.sex === "male" ? "M" : "";
+      return {
+        followUp: f,
+        status: dueStatus(f.dueAt, now),
+        caseLabel: `${c.patient.ageYears ?? "—"}${sex} · ${c.encounter.chiefComplaint ?? "case"}`,
+      };
+    })
+    .sort((a, b) => {
+      const rank = { overdue: 0, due_soon: 1, upcoming: 2 } as const;
+      return rank[a.status] - rank[b.status] || a.followUp.dueAt.localeCompare(b.followUp.dueAt);
+    });
 
   return (
     <div className="space-y-6">
@@ -25,6 +49,8 @@ export default async function HomePage() {
           </a>
         )}
       </div>
+
+      <FollowUpDashboard items={followUpItems} />
 
       <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
         {cases.map((c) => (

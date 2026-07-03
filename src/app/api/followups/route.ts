@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { FollowUpCreate } from "@/lib/followup/schema";
-import { createFollowUp, listFollowUps, getFollowUp } from "@/lib/followup/store";
+import { createFollowUp, listFollowUps, getFollowUp, setFollowUpStatus } from "@/lib/followup/store";
 import { dispatchReminder } from "@/lib/followup/dispatch";
 import { getCase } from "@/lib/store";
 import { recordAudit } from "@/lib/audit";
@@ -21,6 +21,7 @@ export const runtime = "nodejs";
 const Body = z.discriminatedUnion("op", [
   FollowUpCreate.extend({ op: z.literal("create") }),
   z.object({ op: z.literal("send"), followUpId: z.string().min(1) }),
+  z.object({ op: z.literal("complete"), followUpId: z.string().min(1) }),
 ]);
 
 async function authedClinician(): Promise<{ id: string }> {
@@ -72,6 +73,15 @@ export async function POST(req: Request) {
       detail: { followUpId: followUp.id, recipients: followUp.recipients, dueAt: followUp.dueAt },
     });
     return NextResponse.json({ followUp }, { status: 201 });
+  }
+
+  if (body.op === "complete") {
+    // The patient reported back (or the loop closed another way) — done.
+    const updated = setFollowUpStatus(body.followUpId, clinicianId, "completed");
+    if (!updated) {
+      return NextResponse.json({ error: "Follow-up not found." }, { status: 404 });
+    }
+    return NextResponse.json({ followUp: updated });
   }
 
   // op === "send"
