@@ -13,3 +13,7 @@ tsconfig.tsbuildinfo
 
 # local agent tooling state
 .claude-flow/
+
+# playwright artifacts
+test-results/
+playwright-report/

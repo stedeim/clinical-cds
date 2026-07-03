@@ -39,8 +39,12 @@ test("create case → bad dose fires the flag → revise resolves it", async ({ 
   await expect(page.getByText("Dose check · Lisinopril")).toBeVisible();
   await expect(page.getByText("above the reference maximum")).toBeVisible();
 
-  // …and the clinician's revision resolves it honestly.
-  await page.getByRole("button", { name: "Revise dose…" }).click();
+  // …and the clinician's revision resolves it honestly. (Click-until-effect:
+  // on a cold compile the first click can land before React hydrates.)
+  await expect(async () => {
+    await page.getByRole("button", { name: "Revise dose…" }).click();
+    await expect(page.getByPlaceholder("e.g. 20 mg")).toBeVisible({ timeout: 1500 });
+  }).toPass({ timeout: 20_000 });
   await page.getByPlaceholder("e.g. 20 mg").fill("20 mg");
   await page.getByRole("button", { name: "Save & re-check" }).click();
   await expect(page.getByText("within the reference maximum")).toBeVisible();
