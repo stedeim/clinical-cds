@@ -16,7 +16,8 @@ const csp = [
   "img-src 'self' data:",
   // clinicaltables.nlm.nih.gov: keyless NIH autocomplete for the intake form
   // (only the typed search term is sent — never patient identity or chart).
-  "connect-src 'self' https://*.supabase.co https://clinicaltables.nlm.nih.gov",
+  // sentry ingest: browser error events (scrubbed; active only with a DSN).
+  "connect-src 'self' https://*.supabase.co https://clinicaltables.nlm.nih.gov https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
