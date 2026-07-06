@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { inferSpeaker, type InferredSpeaker } from "@/lib/note/speaker-infer";
 
 // In-encounter dictation via the browser's Web Speech API.
 //
@@ -35,8 +36,6 @@ const T = {
   mono: "'IBM Plex Mono',ui-monospace,monospace",
 };
 
-type Speaker = "DR" | "PT";
-
 export function Dictation({ onSegment }: { onSegment: (line: string) => void }) {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [consented, setConsented] = useState(false);
@@ -48,13 +47,9 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
   // re-creating the recognition object on every render.
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const recordingRef = useRef(false);
-  const speakerRef = useRef<Speaker>("PT");
-  const [speaker, setSpeakerState] = useState<Speaker>("PT");
-
-  function setSpeaker(s: Speaker) {
-    speakerRef.current = s;
-    setSpeakerState(s);
-  }
+  // Last inferred speaker — feeds the alternation prior in inferSpeaker.
+  const lastSpeakerRef = useRef<InferredSpeaker | null>(null);
+  const [lastSpeaker, setLastSpeaker] = useState<InferredSpeaker | null>(null);
 
   useEffect(() => {
     setSupported(!!(window.SpeechRecognition ?? window.webkitSpeechRecognition));
@@ -81,7 +76,12 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
         const text = result[0]?.transcript?.trim();
         if (!text) continue;
         if (result.isFinal) {
-          onSegment(`${speakerRef.current}: ${text}`);
+          // Speaker inferred from what was said (no manual toggle) — the
+          // DR:/PT: prefix lands in the editable transcript, correctable.
+          const speaker = inferSpeaker(text, lastSpeakerRef.current);
+          lastSpeakerRef.current = speaker;
+          setLastSpeaker(speaker);
+          onSegment(`${speaker}: ${text}`);
         } else {
           interimText += text + " ";
         }
@@ -177,27 +177,14 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
             {recording ? "Stop dictation" : "Start dictation"}
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ fontSize: 11, color: T.muted }}>speaking:</span>
-            {(["DR", "PT"] as Speaker[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSpeaker(s)}
-                aria-pressed={speaker === s}
-                style={{
-                  font: `600 11px/1 ${T.mono}`,
-                  color: speaker === s ? "#fff" : T.accentInk,
-                  background: speaker === s ? T.accent : T.accentBg,
-                  border: `1px solid ${speaker === s ? T.accent : T.accentLine}`,
-                  borderRadius: 6,
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                }}
-              >
-                {s === "DR" ? "Doctor" : "Patient"}
-              </button>
-            ))}
-          </div>
+          {recording && lastSpeaker && (
+            <span
+              title="Speaker inferred from what was said — edit the DR:/PT: prefix below if it guessed wrong."
+              style={{ font: `600 11px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 6, padding: "6px 10px", cursor: "help" }}
+            >
+              last: {lastSpeaker === "DR" ? "Doctor" : "Patient"}
+            </span>
+          )}
 
           {recording && (
             <span style={{ fontSize: 11.5, color: interim ? T.body : T.faint, fontStyle: interim ? "normal" : "italic", flex: 1, minWidth: 120 }}>
@@ -208,7 +195,7 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
       )}
 
       <div style={{ marginTop: 6, fontSize: 10, color: T.faint, lineHeight: 1.45 }}>
-        Demo dictation — uses the browser&rsquo;s speech engine (audio may be processed by the browser vendor). Not for real patient conversations until a BAA-covered transcription provider is connected.
+        Speaker labels (DR/PT) are inferred from what&rsquo;s said — fix any wrong prefix right in the text below. Demo dictation — uses the browser&rsquo;s speech engine (audio may be processed by the browser vendor). Not for real patient conversations until a BAA-covered transcription provider is connected.
       </div>
       {error && <div style={{ marginTop: 6, fontSize: 11, color: T.amberInk }}>{error}</div>}
     </div>
