@@ -38,6 +38,12 @@ const allergiesSchema = z.string().transform((s) => toObjects("substance", s));
 
 export const CaseIntakeSchema = z.object({
   externalRef: z.string().max(64).optional(),
+  // Optional display name — blank keeps the record pseudonymous.
+  patientName: z
+    .string()
+    .max(80)
+    .optional()
+    .transform((s) => (s?.trim() ? s.trim() : undefined)),
   ageYears: z.coerce.number().int().min(0).max(130).optional(),
   sex: SexEnum.default("unknown"),
   chiefComplaint: z.string().min(1).max(500),
@@ -113,6 +119,7 @@ export function caseFromIntake(
     patient: {
       id: clinicianId ? crypto.randomUUID() : "demo-patient-" + Date.now(),
       externalRef: data.externalRef,
+      displayName: data.patientName,
       ageYears: data.ageYears,
       sex: data.sex,
       isTestCase: false,

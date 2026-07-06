@@ -12,6 +12,9 @@ export type Sex = "female" | "male" | "intersex" | "unknown";
 export interface Patient {
   id: string;
   externalRef?: string; // opaque, clinician-defined; not mapped to identity here
+  // Optional, clinician's choice: a display name for the chart. Leaving it
+  // blank keeps the record pseudonymous (the original privacy default).
+  displayName?: string;
   ageYears?: number;
   sex?: Sex;
   isTestCase: boolean;

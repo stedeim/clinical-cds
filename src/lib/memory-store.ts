@@ -11,6 +11,7 @@ export type { CaseContext, CaseRecord };
 const seedPatient: CaseContext["patient"] = {
   id: "demo-patient-1",
   externalRef: "DEMO-001",
+  displayName: "Margaret Chen", // the v2 design's demo patient
   ageYears: 54,
   sex: "female",
   isTestCase: true,

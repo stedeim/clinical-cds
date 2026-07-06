@@ -6,8 +6,13 @@ import { test, expect } from "@playwright/test";
 
 test("home page renders the case list", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Your cases" })).toBeVisible();
+  // Signed in: a time-of-day greeting with the doctor's name; otherwise "Your cases".
+  await expect(
+    page.getByRole("heading", { name: /Good (morning|afternoon|evening), Dr\.|Your cases/ }),
+  ).toBeVisible();
   await expect(page.getByText("Persistent dry cough")).toBeVisible();
+  // The seeded demo patient's display name.
+  await expect(page.getByText("Margaret Chen")).toBeVisible();
 });
 
 test("seeded demo case renders the encounter with its moats", async ({ page }) => {
@@ -24,8 +29,8 @@ test("seeded demo case renders the encounter with its moats", async ({ page }) =
 test("create case → bad dose fires the flag → revise resolves it", async ({ page }) => {
   await page.goto("/cases/new");
 
-  await page.getByRole("spinbutton").fill("58"); // age
-  await page.getByRole("textbox").nth(1).fill("HTN follow-up e2e"); // chief complaint
+  await page.getByLabel("Age").fill("58");
+  await page.getByLabel("Chief complaint").fill("HTN follow-up e2e");
   // Free-text problem + med (Enter path — no external API).
   await page.getByPlaceholder(/Search ICD-10/).fill("Essential hypertension");
   await page.getByPlaceholder(/Search ICD-10/).press("Enter");

@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 
 export interface CaseRow {
   encounterId: string;
+  patientName?: string; // optional display name; absent = pseudonymous
   patientLabel: string; // "54F"
   chiefComplaint: string;
   problems: string; // comma-joined labels
@@ -24,7 +25,7 @@ export function CaseList({ cases }: { cases: CaseRow[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return cases;
     return cases.filter((c) =>
-      [c.patientLabel, c.chiefComplaint, c.problems, c.externalRef ?? ""]
+      [c.patientName ?? "", c.patientLabel, c.chiefComplaint, c.problems, c.externalRef ?? ""]
         .join(" ")
         .toLowerCase()
         .includes(q),
@@ -55,13 +56,29 @@ export function CaseList({ cases }: { cases: CaseRow[] }) {
           className="flex items-center gap-4 rounded-[14px] bg-white px-4 py-[14px] shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)] transition-transform hover:-translate-y-px"
         >
           <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#EEF2EE] text-xs font-semibold text-[#3c5646]">
-            {c.patientLabel}
+            {c.patientName
+              ? c.patientName
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((w) => w[0]?.toUpperCase() ?? "")
+                  .join("")
+              : c.patientLabel}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15.5px] font-semibold leading-snug text-ink">
-              {c.chiefComplaint || "No chief complaint"}
+              {c.patientName ? (
+                <>
+                  {c.patientName}
+                  <span className="ml-2 font-mono text-[11.5px] font-normal text-[#948d7c]">
+                    {c.patientLabel}
+                  </span>
+                </>
+              ) : (
+                c.chiefComplaint || "No chief complaint"
+              )}
             </span>
             <span className="mt-0.5 block truncate text-xs text-[#6b665a]">
+              {c.patientName ? `${c.chiefComplaint || "No chief complaint"} · ` : ""}
               {c.problems || "No problems listed"}
               {c.externalRef && (
                 <span className="ml-1.5 font-mono text-[11.5px] text-[#948d7c]">{c.externalRef}</span>

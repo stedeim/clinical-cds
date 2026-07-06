@@ -5,6 +5,7 @@ import type { Problem, Medication } from "@/lib/types";
 import { ProblemsField, MedicationsField } from "@/components/intake/CodedFields";
 
 const DEFAULTS = {
+  patientName: "",
   externalRef: "",
   ageYears: "",
   sex: "unknown",
@@ -81,7 +82,15 @@ export function CaseIntakeForm() {
     >
       {/* Step 1 — who */}
       <div className="border-b border-[#FBFAF6] px-[22px] py-[18px]">
-        <StepHead n={1} title="Who is this?" aside="pseudonymous — no name, no DOB" />
+        <StepHead n={1} title="Who is this?" aside="name optional — no DOB, ever" />
+        <div className="mb-[13px]">
+          <Field
+            label="Patient name"
+            labelAside="· optional — leave blank to keep the record pseudonymous"
+            value={form.patientName}
+            onChange={(v) => update("patientName", v)}
+          />
+        </div>
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
           <div>
             <Field
@@ -223,6 +232,7 @@ function Field({
       </label>
       <input
         type={type}
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
@@ -254,6 +264,7 @@ function Area({
         {labelAside && <span className="ml-1 font-medium text-[#948d7c]">{labelAside}</span>}
       </label>
       <textarea
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}

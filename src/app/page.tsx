@@ -1,5 +1,6 @@
 import { listCases } from "@/lib/store";
 import { getServerUser } from "@/lib/server-user";
+import { getCurrentClinician } from "@/lib/clinician";
 import { listOpenFollowUps } from "@/lib/followup/store";
 import { dueStatus } from "@/lib/followup/due";
 import { FollowUpDashboard, type DashboardItem } from "@/components/followup/FollowUpDashboard";
@@ -10,6 +11,14 @@ import type { Problem } from "@/lib/types";
 export default async function HomePage() {
   const user = await getServerUser();
   const cases = await listCases(user?.id);
+  const clinician = user ? await getCurrentClinician(user.id) : null;
+
+  // "Good morning, Dr. Chen" — the v2 design's greeting. Server-local time is
+  // an approximation, so the phrasing degrades gracefully around midnight.
+  const hour = new Date().getHours();
+  const daypart = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+  const surname = clinician?.fullName?.trim().split(/\s+/).at(-1);
+  const greeting = surname ? `Good ${daypart}, Dr. ${surname}` : "Your cases";
 
   // Cross-case follow-up feed: every open item, worst first. Case labels come
   // from the already-loaded case list; a follow-up whose case is gone (stub
@@ -24,7 +33,9 @@ export default async function HomePage() {
       return {
         followUp: f,
         status: dueStatus(f.dueAt, now),
-        caseLabel: `${c.patient.ageYears ?? "—"}${sex} · ${c.encounter.chiefComplaint ?? "case"}`,
+        caseLabel:
+          c.patient.displayName ??
+          `${c.patient.ageYears ?? "—"}${sex} · ${c.encounter.chiefComplaint ?? "case"}`,
       };
     })
     .sort((a, b) => {
@@ -39,7 +50,7 @@ export default async function HomePage() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="font-serif text-[26px] font-semibold leading-tight tracking-tight text-ink">
-            Your cases
+            {greeting}
           </h1>
           <p className="mt-1 text-[14px] text-[#6b665a]">
             {cases.length} case{cases.length === 1 ? "" : "s"}
@@ -62,6 +73,7 @@ export default async function HomePage() {
         cases={cases.map(
           (c): CaseRow => ({
             encounterId: c.encounter.id,
+            patientName: c.patient.displayName,
             patientLabel: `${c.patient.ageYears ?? "—"}${c.patient.sex === "female" ? "F" : c.patient.sex === "male" ? "M" : ""}`,
             chiefComplaint: c.encounter.chiefComplaint ?? "",
             problems: c.encounter.problems.map((p: Problem) => p.label).join(", "),

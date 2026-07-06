@@ -23,6 +23,7 @@ export interface DbPatient {
   id: string;
   clinician_id: string;
   external_ref: string | null;
+  display_name: string | null;
   age_years: number | null;
   sex: "female" | "male" | "intersex" | "unknown" | null;
   is_test_case: boolean;

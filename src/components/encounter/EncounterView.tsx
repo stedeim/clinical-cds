@@ -53,6 +53,19 @@ function sexInitial(sex?: string): string {
   return sex === "female" ? "F" : sex === "male" ? "M" : sex === "intersex" ? "I" : "";
 }
 
+// Avatar initials: from the display name when one exists ("Margaret Chen" →
+// "MC"), otherwise the pseudonymous age/sex descriptor ("54F").
+function patientInitials(p: { displayName?: string; ageYears?: number; sex?: string }): string {
+  if (p.displayName) {
+    return p.displayName
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("");
+  }
+  return `${p.ageYears ?? "—"}${sexInitial(p.sex)}`;
+}
+
 // Regional prescribing-pattern card. Descriptive, cited, rank-based peer data
 // from PUBLIC datasets (CMS Part D, OpenPrescribing, PBS/CIHI) — what peers
 // commonly prescribe in this region, never what to prescribe. Percentages
@@ -303,26 +316,26 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
       }}
     >
       <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-        {/* topbar */}
+        {/* topbar — patient identity, not the brand: the app header above
+            already says Pabaid once, and once is enough. */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, flexWrap: "wrap" }}>
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, font: `600 20px/1 ${T.serif}`, color: T.ink, textDecoration: "none" }}>
-            <span style={{ width: 17, height: 17, borderRadius: "50%", background: `conic-gradient(${T.accent} 0 50%,${T.ink} 0 100%)`, display: "inline-block" }} />
-            Pabaid
-          </a>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 13px", background: T.card, borderRadius: 22, fontSize: 14, color: T.body, boxShadow: "0 2px 8px -5px rgba(50,42,26,.35)" }}>
-            <b style={{ color: T.ink }}>
-              {patient.ageYears ?? "—"}
-              {sexInitial(patient.sex)} patient
-            </b>
-            {encounter.chiefComplaint && (
-              <>
-                <span style={{ color: T.faint }}>·</span>
-                <span>{encounter.chiefComplaint}</span>
-              </>
-            )}
+          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "5px 14px 5px 6px", background: T.card, borderRadius: 22, boxShadow: "0 2px 8px -5px rgba(50,42,26,.35)" }}>
+            <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#EFEDE6", display: "flex", alignItems: "center", justifyContent: "center", font: `600 12px/1 ${T.sans}`, color: T.muted, flexShrink: 0 }}>
+              {patientInitials(patient)}
+            </span>
+            <span style={{ lineHeight: 1.3 }}>
+              <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: T.ink }}>
+                {patient.displayName ?? `${patient.ageYears ?? "—"}${sexInitial(patient.sex)} patient`}
+              </span>
+              <span style={{ display: "block", font: `400 11.5px/1 ${T.mono}`, color: T.muted }}>
+                {patient.ageYears ?? "—"}
+                {sexInitial(patient.sex)}
+                {patient.externalRef ? ` · ${patient.externalRef}` : ""}
+              </span>
+            </span>
           </div>
-          {patient.externalRef && (
-            <span style={{ font: `500 12px/1 ${T.mono}`, color: T.muted }}>{patient.externalRef}</span>
+          {encounter.chiefComplaint && (
+            <span style={{ fontSize: 14, color: T.body }}>{encounter.chiefComplaint}</span>
           )}
           <div style={{ flex: 1 }} />
           {/* Honest state: ambient capture isn't built — no fake live timer. */}
