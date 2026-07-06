@@ -11,11 +11,12 @@ export const T = {
   card: "#ffffff",
   panelBg: "#FBFAF6",
 
-  // text
+  // text — muted/faint kept warm but dark enough to actually read
+  // (the first cut of the redesign failed legibility here).
   ink: "#211f19",
   body: "#2c2a25",
-  muted: "#8b8779",
-  faint: "#bcb7a9",
+  muted: "#6b665a",
+  faint: "#948d7c",
 
   // borders
   line: "#E6E4DB", // card/control borders

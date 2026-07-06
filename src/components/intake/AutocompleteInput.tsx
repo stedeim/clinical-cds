@@ -115,7 +115,7 @@ export function AutocompleteInput({
                 }`}
               >
                 <span className="text-ink">{o.primary}</span>
-                {o.secondary && <span className="font-mono text-xs text-[#bcb7a9]">{o.secondary}</span>}
+                {o.secondary && <span className="font-mono text-xs text-[#948d7c]">{o.secondary}</span>}
               </button>
             </li>
           ))}

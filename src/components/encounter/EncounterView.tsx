@@ -60,25 +60,25 @@ function sexInitial(sex?: string): string {
 function RegionalPatternCard({ pattern, defaultOpen }: { pattern: RegionalPattern; defaultOpen?: boolean }) {
   return (
     <details open={defaultOpen} style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, overflow: "hidden" }}>
-      <summary style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 16px", cursor: "pointer", font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, listStyle: "none" }}>
+      <summary style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 16px", cursor: "pointer", font: `700 11px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, listStyle: "none" }}>
         <span style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${T.accent}`, flexShrink: 0 }} />
         Regional patterns · {pattern.regionLabel}
-        <span style={{ marginLeft: "auto", font: `400 10px/1 ${T.mono}`, color: T.faint, letterSpacing: 0, textTransform: "none", whiteSpace: "nowrap" as const }}>{pattern.source}</span>
+        <span style={{ marginLeft: "auto", font: `400 11px/1 ${T.mono}`, color: T.faint, letterSpacing: 0, textTransform: "none", whiteSpace: "nowrap" as const }}>{pattern.source}</span>
       </summary>
       <div style={{ padding: "2px 17px 15px" }}>
         <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>
           {pattern.conditionLabel} — what peers commonly prescribe
         </div>
-        <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
+        <ul style={{ margin: 0, paddingLeft: 17, fontSize: 13.5, lineHeight: 1.65, color: T.body }}>
           {pattern.bullets.map((b, i) => (
             <li key={i}>{b}</li>
           ))}
         </ul>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-          <span style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
+          <span style={{ font: `600 11px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
             {pattern.source}
           </span>
-          <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>descriptive — not a recommendation</span>
+          <span style={{ font: `400 11px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>descriptive — not a recommendation</span>
         </div>
       </div>
     </details>
@@ -91,25 +91,25 @@ function RegionalPatternCard({ pattern, defaultOpen }: { pattern: RegionalPatter
 function CheatSheetCard({ sheet, defaultOpen }: { sheet: CheatSheet; defaultOpen?: boolean }) {
   return (
     <details open={defaultOpen} style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, overflow: "hidden" }}>
-      <summary style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 16px", cursor: "pointer", font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, listStyle: "none" }}>
+      <summary style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 16px", cursor: "pointer", font: `700 11px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, listStyle: "none" }}>
         <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, flexShrink: 0 }} />
         Surfaced for you · {sheet.topic}
-        <span style={{ marginLeft: "auto", font: `400 10px/1 ${T.mono}`, color: T.faint, letterSpacing: 0, textTransform: "none", whiteSpace: "nowrap" as const }}>cited from library</span>
+        <span style={{ marginLeft: "auto", font: `400 11px/1 ${T.mono}`, color: T.faint, letterSpacing: 0, textTransform: "none", whiteSpace: "nowrap" as const }}>cited from library</span>
       </summary>
       <div style={{ padding: "2px 17px 15px" }}>
         <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>{sheet.title}</div>
-        <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
+        <ul style={{ margin: 0, paddingLeft: 17, fontSize: 13.5, lineHeight: 1.65, color: T.body }}>
           {sheet.bullets.map((b, i) => (
             <li key={i}>{b}</li>
           ))}
         </ul>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
           {sheet.sources.map((s) => (
-            <span key={s} style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
+            <span key={s} style={{ font: `600 11px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
               {s}
             </span>
           ))}
-          <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>cited from library</span>
+          <span style={{ font: `400 11px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>cited from library</span>
         </div>
       </div>
     </details>
@@ -123,7 +123,7 @@ function HandoutsCard({ handouts }: { handouts: Handout[] }) {
   if (handouts.length === 0) return null;
   return (
     <div style={{ background: T.card, borderRadius: 14, padding: "15px 18px", boxShadow: T.shadow }}>
-      <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 9 }}>
+      <div style={{ font: `700 11px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 9 }}>
         Patient handouts
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -133,14 +133,14 @@ function HandoutsCard({ handouts }: { handouts: Handout[] }) {
             href={h.url}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ fontSize: 12.5, lineHeight: 1.5, color: T.accentInk, textDecoration: "none" }}
+            style={{ fontSize: 13.5, lineHeight: 1.5, color: T.accentInk, textDecoration: "none" }}
           >
             <span style={{ textDecoration: "underline" }}>{h.title}</span> ↗
-            <span style={{ color: T.faint, marginLeft: 6, fontSize: 11 }}>for {h.problemLabel}</span>
+            <span style={{ color: T.faint, marginLeft: 6, fontSize: 12 }}>for {h.problemLabel}</span>
           </a>
         ))}
       </div>
-      <div style={{ marginTop: 9, font: `400 10px ${T.mono}`, color: T.faint }}>MedlinePlus · NIH — printable patient education</div>
+      <div style={{ marginTop: 9, font: `400 11px ${T.mono}`, color: T.faint }}>MedlinePlus · NIH — printable patient education</div>
     </div>
   );
 }
@@ -158,9 +158,9 @@ function MedicationsRail({
 }) {
   return (
     <div>
-      <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 }}>Medications</div>
+      <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 }}>Medications</div>
       {medications.length === 0 ? (
-        <div style={{ fontSize: 12, color: T.faint }}>None on file</div>
+        <div style={{ fontSize: 13, color: T.faint }}>None on file</div>
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {medications.map((m, i) => {
@@ -171,7 +171,7 @@ function MedicationsRail({
                 key={i}
                 title={flagged ? `FDA BOXED WARNING (from the drug label, via openFDA):\n${warning?.summary ?? ""}` : undefined}
                 style={{
-                  fontSize: 11.5,
+                  fontSize: 12.5,
                   lineHeight: 1.35,
                   color: T.body,
                   background: "#fff",
@@ -183,7 +183,7 @@ function MedicationsRail({
               >
                 {[m.name, m.dose].filter(Boolean).join(" ")}
                 {flagged && (
-                  <span style={{ font: `700 9px/1 ${T.sans}`, color: "#fff", background: "#1f2937", borderRadius: 3, padding: "2px 5px", marginLeft: 6, letterSpacing: ".04em" }}>
+                  <span style={{ font: `700 10px/1 ${T.sans}`, color: "#fff", background: "#1f2937", borderRadius: 3, padding: "2px 5px", marginLeft: 6, letterSpacing: ".04em" }}>
                     ⬛ BOXED
                   </span>
                 )}
@@ -199,13 +199,13 @@ function MedicationsRail({
 function RailSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
     <div>
-      <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 }}>{title}</div>
+      <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 }}>{title}</div>
       {items.length === 0 ? (
-        <div style={{ fontSize: 12, color: T.faint }}>{empty}</div>
+        <div style={{ fontSize: 13, color: T.faint }}>{empty}</div>
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {items.map((it, i) => (
-            <span key={i} style={{ fontSize: 11.5, lineHeight: 1.35, color: T.body, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 6, padding: "3px 8px" }}>
+            <span key={i} style={{ fontSize: 12.5, lineHeight: 1.35, color: T.body, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 6, padding: "3px 8px" }}>
               {it}
             </span>
           ))}
@@ -309,7 +309,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             <span style={{ width: 17, height: 17, borderRadius: "50%", background: `conic-gradient(${T.accent} 0 50%,${T.ink} 0 100%)`, display: "inline-block" }} />
             Pabaid
           </a>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 13px", background: T.card, borderRadius: 22, fontSize: 13, color: T.body, boxShadow: "0 2px 8px -5px rgba(50,42,26,.35)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 13px", background: T.card, borderRadius: 22, fontSize: 14, color: T.body, boxShadow: "0 2px 8px -5px rgba(50,42,26,.35)" }}>
             <b style={{ color: T.ink }}>
               {patient.ageYears ?? "—"}
               {sexInitial(patient.sex)} patient
@@ -322,11 +322,11 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             )}
           </div>
           {patient.externalRef && (
-            <span style={{ font: `500 11px/1 ${T.mono}`, color: T.muted }}>{patient.externalRef}</span>
+            <span style={{ font: `500 12px/1 ${T.mono}`, color: T.muted }}>{patient.externalRef}</span>
           )}
           <div style={{ flex: 1 }} />
           {/* Honest state: ambient capture isn't built — no fake live timer. */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 22, font: `600 11.5px/1 ${T.sans}`, color: T.muted }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 22, font: `600 12.5px/1 ${T.sans}`, color: T.muted }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.faint, display: "inline-block" }} />
             Ambient scribe · soon
           </div>
@@ -339,24 +339,24 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
         <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[236px_minmax(0,1fr)] xl:grid-cols-[236px_minmax(0,1.4fr)_minmax(0,1fr)]">
           {/* chart rail (real data) */}
           <aside style={{ background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 16, padding: "16px 15px", display: "flex", flexDirection: "column", gap: 15 }}>
-            <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent }}>Chart</div>
+            <div style={{ font: `700 11px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent }}>Chart</div>
 
             {/* ONE "needs your eyes" strip at the top of the rail — every item
                 that wants clinician attention, gathered instead of scattered.
                 Rendered only when something actually needs attention. */}
             {allergyFindings.length + allergySuggestions.length > 0 && (
               <div style={{ background: T.amberBg, border: `1px solid ${T.amberLine}`, borderRadius: 12, padding: "10px 12px" }}>
-                <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.amberInk, marginBottom: 6 }}>
+                <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.amberInk, marginBottom: 6 }}>
                   Needs your eyes · {allergyFindings.length + allergySuggestions.length}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {allergyFindings.map((f, i) => (
-                    <div key={`f${i}`} style={{ fontSize: 11.5, lineHeight: 1.5, color: T.amberInk }}>
+                    <div key={`f${i}`} style={{ fontSize: 12.5, lineHeight: 1.5, color: T.amberInk }}>
                       ⚠ <b>{f.medication}</b> conflicts with recorded <b>{f.allergen}</b> allergy ({f.allergySource})
                     </div>
                   ))}
                   {allergySuggestions.map((s, i) => (
-                    <div key={`s${i}`} style={{ fontSize: 11.5, lineHeight: 1.5, color: T.amberInk }}>
+                    <div key={`s${i}`} style={{ fontSize: 12.5, lineHeight: 1.5, color: T.amberInk }}>
                       📄 Document mentions a possible <b>{s.substance}</b> allergy — review below
                     </div>
                   ))}
@@ -391,28 +391,28 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             {reconciliation &&
               (reconciliation.started.length > 0 || reconciliation.stopped.length > 0 || reconciliation.changed.length > 0) && (
                 <details style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-                  <summary style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, cursor: "pointer", display: "flex", alignItems: "center" }}>
+                  <summary style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, cursor: "pointer", display: "flex", alignItems: "center" }}>
                     Since last visit
-                    <span style={{ font: `600 9px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 8, padding: "2px 6px", marginLeft: "auto" }}>
+                    <span style={{ font: `600 10px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 8, padding: "2px 6px", marginLeft: "auto" }}>
                       {reconciliation.started.length + reconciliation.stopped.length + reconciliation.changed.length}
                     </span>
                   </summary>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, lineHeight: 1.45, color: T.body, paddingTop: 8 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12.5, lineHeight: 1.45, color: T.body, paddingTop: 8 }}>
                     {reconciliation.started.map((m, i) => (
                       <div key={`s${i}`}>
-                        <span style={{ font: `700 9px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STARTED</span>
+                        <span style={{ font: `700 10px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STARTED</span>
                         {[m.name, m.dose].filter(Boolean).join(" ")}
                       </div>
                     ))}
                     {reconciliation.stopped.map((m, i) => (
                       <div key={`x${i}`}>
-                        <span style={{ font: `700 9px/1 ${T.mono}`, color: T.redInk, background: T.redBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STOPPED</span>
+                        <span style={{ font: `700 10px/1 ${T.mono}`, color: T.redInk, background: T.redBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STOPPED</span>
                         {[m.name, m.dose].filter(Boolean).join(" ")}
                       </div>
                     ))}
                     {reconciliation.changed.map((c, i) => (
                       <div key={`c${i}`}>
-                        <span style={{ font: `700 9px/1 ${T.mono}`, color: T.amberInk, background: T.amberBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>CHANGED</span>
+                        <span style={{ font: `700 10px/1 ${T.mono}`, color: T.amberInk, background: T.amberBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>CHANGED</span>
                         {c.name}: {c.from} → {c.to}
                       </div>
                     ))}
@@ -423,7 +423,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             {/* Vitals trends across visits (numeric series with ≥2 points). */}
             {trends.length > 0 && (
               <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-                <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
+                <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
                   Trends
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -440,12 +440,12 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                       .join(" ");
                     const rising = values[values.length - 1] > values[0];
                     return (
-                      <div key={t.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+                      <div key={t.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
                         <span style={{ color: T.muted, width: 68, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
                         <svg width={w} height={h + 2} style={{ flexShrink: 0 }} aria-hidden>
                           <path d={path} fill="none" stroke={T.accent} strokeWidth="1.5" />
                         </svg>
-                        <span style={{ font: `500 10.5px ${T.mono}`, color: T.body }}>
+                        <span style={{ font: `500 11.5px ${T.mono}`, color: T.body }}>
                           {values[0]} → {values[values.length - 1]}
                           {t.unit ? ` ${t.unit}` : ""} {rising ? "↑" : values[values.length - 1] < values[0] ? "↓" : "→"}
                         </span>
@@ -460,9 +460,9 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                 uploaded history documents. */}
             {history.length > 0 && (
               <details style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-                <summary style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, cursor: "pointer", display: "flex", alignItems: "center" }}>
+                <summary style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, cursor: "pointer", display: "flex", alignItems: "center" }}>
                   Previous visits
-                  <span style={{ font: `600 9px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 8, padding: "2px 6px", marginLeft: "auto" }}>
+                  <span style={{ font: `600 10px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 8, padding: "2px 6px", marginLeft: "auto" }}>
                     {history.length}
                   </span>
                 </summary>
@@ -471,9 +471,9 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                     <a
                       key={h.encounter.id}
                       href={`/cases/${h.encounter.id}`}
-                      style={{ fontSize: 11.5, lineHeight: 1.45, color: T.accentInk, textDecoration: "none" }}
+                      style={{ fontSize: 12.5, lineHeight: 1.45, color: T.accentInk, textDecoration: "none" }}
                     >
-                      <span style={{ font: `500 10px/1 ${T.mono}`, color: T.muted, marginRight: 6 }}>
+                      <span style={{ font: `500 11px/1 ${T.mono}`, color: T.muted, marginRight: 6 }}>
                         {h.encounter.occurredAt.slice(0, 10)}
                       </span>
                       <span style={{ textDecoration: "underline" }}>{h.encounter.chiefComplaint ?? "visit"}</span>
@@ -489,8 +489,8 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                 dictation IS: the note's "+ Add transcript" panel has a mic that
                 turns speech into DR:/PT: lines via the browser speech engine. */}
             <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-              <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>Visit transcript</div>
-              <div style={{ fontSize: 11.5, lineHeight: 1.5, color: T.faint }}>Dictate with the mic (demo speech engine) or paste a transcript in the note — either grounds spoken lines. Hands-free ambient capture is coming.</div>
+              <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>Visit transcript</div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.5, color: T.faint }}>Dictate with the mic (demo speech engine) or paste a transcript in the note — either grounds spoken lines. Hands-free ambient capture is coming.</div>
             </div>
           </aside>
 
@@ -527,7 +527,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             ))}
             <HandoutsCard handouts={handouts} />
             <div>
-              <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>
+              <div style={{ font: `700 11px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent, marginBottom: 10 }}>Ask about this patient</div>
               <QAPanel encounterId={encounter.id} initialFramework={defaultFramework} />
             </div>
           </div>

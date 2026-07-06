@@ -90,7 +90,7 @@ export function CaseIntakeForm() {
               value={form.externalRef}
               onChange={(v) => update("externalRef", v)}
             />
-            <p className="mt-1 text-[11px] leading-snug text-[#8b8779]">
+            <p className="mt-1 text-[12px] leading-snug text-[#6b665a]">
               Reuse the same ref for a returning patient — visit history and known allergies
               link automatically.
             </p>
@@ -101,7 +101,7 @@ export function CaseIntakeForm() {
             <select
               value={form.sex}
               onChange={(e) => update("sex", e.target.value)}
-              className="w-full rounded-[10px] border border-[#E6E4DB] bg-white px-3 py-[10px] text-[13.5px] text-ink outline-none focus:border-[#CFDCD2]"
+              className="w-full rounded-[10px] border border-[#E6E4DB] bg-white px-3 py-[10px] text-[14.5px] text-ink outline-none focus:border-[#CFDCD2]"
             >
               <option value="unknown">Unknown</option>
               <option value="female">Female</option>
@@ -140,7 +140,7 @@ export function CaseIntakeForm() {
             <ProblemsField problems={problems} onChange={setProblems} />
             <MedicationsField medications={medications} onChange={setMedications} />
           </div>
-          <p className="-mt-1 text-[11px] leading-snug text-[#8b8779]">
+          <p className="-mt-1 text-[12px] leading-snug text-[#6b665a]">
             Doses feed the safety net: reference ceilings, FDA boxed warnings, allergy classes.
           </p>
           <Area
@@ -174,11 +174,11 @@ export function CaseIntakeForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-[10px] bg-clinical px-[22px] py-3 text-[13.5px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(78,107,87,.55)] disabled:opacity-40"
+          className="rounded-[10px] bg-clinical px-[22px] py-3 text-[14.5px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(78,107,87,.55)] disabled:opacity-40"
         >
           {loading ? "Saving…" : "Create case"}
         </button>
-        <span className="text-[11.5px] leading-snug text-[#8b8779]">
+        <span className="text-[12.5px] leading-snug text-[#6b665a]">
           Opens the encounter screen — notes, safety checks, and guideline cards build
           themselves from this chart.
         </span>
@@ -190,11 +190,11 @@ export function CaseIntakeForm() {
 function StepHead({ n, title, aside }: { n: number; title: string; aside?: string }) {
   return (
     <div className="mb-3 flex items-baseline gap-[9px]">
-      <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#EEF2EE] font-mono text-[11px] font-semibold text-[#3c5646]">
+      <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#EEF2EE] font-mono text-[12px] font-semibold text-[#3c5646]">
         {n}
       </span>
       <h2 className="font-serif text-base font-semibold text-ink">{title}</h2>
-      {aside && <span className="text-[11px] text-[#bcb7a9]">{aside}</span>}
+      {aside && <span className="text-[12px] text-[#948d7c]">{aside}</span>}
     </div>
   );
 }
@@ -219,14 +219,14 @@ function Field({
       <label className="mb-[5px] block text-xs font-semibold text-ink">
         {label}
         {required && <span className="text-danger">*</span>}
-        {labelAside && <span className="ml-1 font-medium text-[#bcb7a9]">{labelAside}</span>}
+        {labelAside && <span className="ml-1 font-medium text-[#948d7c]">{labelAside}</span>}
       </label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full rounded-[10px] border border-[#E6E4DB] bg-white px-3 py-[10px] text-[13.5px] text-ink outline-none focus:border-[#CFDCD2] focus:shadow-[0_0_0_3px_#F5F7F4]"
+        className="w-full rounded-[10px] border border-[#E6E4DB] bg-white px-3 py-[10px] text-[14.5px] text-ink outline-none focus:border-[#CFDCD2] focus:shadow-[0_0_0_3px_#F5F7F4]"
       />
     </div>
   );
@@ -251,15 +251,15 @@ function Area({
     <div>
       <label className="mb-[5px] block text-xs font-semibold text-ink">
         {label}
-        {labelAside && <span className="ml-1 font-medium text-[#bcb7a9]">{labelAside}</span>}
+        {labelAside && <span className="ml-1 font-medium text-[#948d7c]">{labelAside}</span>}
       </label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className="w-full resize-none rounded-[10px] border border-[#E6E4DB] bg-white px-3 py-[10px] text-[13.5px] leading-relaxed text-ink outline-none focus:border-[#CFDCD2] focus:shadow-[0_0_0_3px_#F5F7F4]"
+        className="w-full resize-none rounded-[10px] border border-[#E6E4DB] bg-white px-3 py-[10px] text-[14.5px] leading-relaxed text-ink outline-none focus:border-[#CFDCD2] focus:shadow-[0_0_0_3px_#F5F7F4]"
       />
-      {hint && <p className="mt-1 text-[11px] text-[#bcb7a9]">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] text-[#948d7c]">{hint}</p>}
     </div>
   );
 }

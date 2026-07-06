@@ -41,7 +41,7 @@ export default async function HomePage() {
           <h1 className="font-serif text-[26px] font-semibold leading-tight tracking-tight text-ink">
             Your cases
           </h1>
-          <p className="mt-1 text-[13px] text-[#8b8779]">
+          <p className="mt-1 text-[14px] text-[#6b665a]">
             {cases.length} case{cases.length === 1 ? "" : "s"}
             {chasing > 0 && <> · {chasing} follow-up{chasing === 1 ? "" : "s"} need chasing</>}
           </p>
@@ -49,7 +49,7 @@ export default async function HomePage() {
         {user && (
           <a
             href="/cases/new"
-            className="rounded-[10px] bg-clinical px-[18px] py-[11px] text-[13px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(78,107,87,.55)]"
+            className="rounded-[10px] bg-clinical px-[18px] py-[11px] text-[14px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(78,107,87,.55)]"
           >
             + New case
           </a>
@@ -72,7 +72,7 @@ export default async function HomePage() {
         )}
       />
 
-      <p className="text-xs text-[#bcb7a9]">
+      <p className="text-xs text-[#948d7c]">
         Stub mode: one seeded demo case. With Supabase configured, this lists the
         signed-in clinician&apos;s own cases (RLS-scoped).
       </p>

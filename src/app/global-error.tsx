@@ -33,12 +33,12 @@ export default function GlobalError({
           <h1 style={{ font: "600 22px/1.2 Georgia, serif", color: "#211f19", margin: 0 }}>
             Something went wrong
           </h1>
-          <p style={{ fontSize: 13.5, lineHeight: 1.6, color: "#8b8779", margin: "10px 0 0" }}>
+          <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#6b665a", margin: "10px 0 0" }}>
             Pabaid hit an unexpected error. Your case data is unaffected — notes are only
             changed when you save or sign them.
           </p>
           {error.digest && (
-            <p style={{ font: "400 11px/1 monospace", color: "#bcb7a9", margin: "10px 0 0" }}>
+            <p style={{ font: "400 11px/1 monospace", color: "#948d7c", margin: "10px 0 0" }}>
               ref {error.digest}
             </p>
           )}
@@ -51,7 +51,7 @@ export default function GlobalError({
               borderRadius: 10,
               background: "#4E6B57",
               color: "#fff",
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 700,
               textDecoration: "none",
             }}

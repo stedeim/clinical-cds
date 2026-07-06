@@ -23,7 +23,7 @@ function Chip({ children, onRemove }: { children: React.ReactNode; onRemove: () 
         type="button"
         onClick={onRemove}
         aria-label="Remove"
-        className="flex h-5 w-5 items-center justify-center rounded-full text-[#bcb7a9] hover:bg-[#EEEDE6] hover:text-[#5c574a]"
+        className="flex h-5 w-5 items-center justify-center rounded-full text-[#948d7c] hover:bg-[#EEEDE6] hover:text-[#5c574a]"
       >
         ×
       </button>
@@ -94,7 +94,7 @@ export function MedicationsField({
             <Chip key={i} onRemove={() => onChange(medications.filter((_, j) => j !== i))}>
               {m.name}
               {m.dose && <span className="font-mono text-xs text-clinical">{m.dose}</span>}
-              {m.frequency && <span className="text-xs text-[#8b8779]">{m.frequency}</span>}
+              {m.frequency && <span className="text-xs text-[#6b665a]">{m.frequency}</span>}
             </Chip>
           ))}
         </div>
@@ -102,7 +102,7 @@ export function MedicationsField({
 
       {pendingDrug ? (
         <div className="mt-1 rounded-md border border-[#E6E4DB] bg-[#FBFAF6] p-2.5">
-          <p className="text-xs font-medium text-[#8b8779]">
+          <p className="text-xs font-medium text-[#6b665a]">
             {pendingDrug.name} — pick a strength (or skip):
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -119,7 +119,7 @@ export function MedicationsField({
             <button
               type="button"
               onClick={() => addMedication({ name: pendingDrug.name })}
-              className="rounded px-2 py-1 text-xs text-[#8b8779] underline"
+              className="rounded px-2 py-1 text-xs text-[#6b665a] underline"
             >
               skip
             </button>

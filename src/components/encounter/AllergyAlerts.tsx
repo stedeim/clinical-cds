@@ -27,13 +27,13 @@ export function AllergyAlerts({ findings }: { findings: AllergyFindingT[] }) {
             }}
           >
             <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-              <span style={{ color: ink, fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>⚠</span>
+              <span style={{ color: ink, fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>⚠</span>
               <div style={{ flex: 1 }}>
-                <div style={{ font: `700 12.5px/1.3 ${T.sans}`, color: ink }}>
+                <div style={{ font: `700 13.5px/1.3 ${T.sans}`, color: ink }}>
                   Allergy {cross ? "cross-reactivity caution" : "conflict"} · {f.medication}
                 </div>
-                <div style={{ fontSize: 12, color: ink, lineHeight: 1.5, marginTop: 2 }}>{f.message}</div>
-                <div style={{ fontSize: 10.5, color: ink, opacity: 0.75, marginTop: 3 }}>Basis: {f.basis}</div>
+                <div style={{ fontSize: 13, color: ink, lineHeight: 1.5, marginTop: 2 }}>{f.message}</div>
+                <div style={{ fontSize: 11.5, color: ink, opacity: 0.75, marginTop: 3 }}>Basis: {f.basis}</div>
               </div>
             </div>
           </div>

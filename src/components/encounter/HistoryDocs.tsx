@@ -48,13 +48,13 @@ export function HistoryDocs({
   return (
     <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>
+        <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>
           History documents
         </div>
         <button
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          style={{ font: `600 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: `1px solid ${T.accentLine}`, borderRadius: 7, padding: "4px 8px", cursor: "pointer" }}
+          style={{ font: `600 11.5px/1 ${T.sans}`, color: T.accent, background: "none", border: `1px solid ${T.accentLine}`, borderRadius: 7, padding: "4px 8px", cursor: "pointer" }}
         >
           {busy ? "Uploading…" : "+ Upload"}
         </button>
@@ -71,7 +71,7 @@ export function HistoryDocs({
       </div>
 
       {documents.length === 0 ? (
-        <div style={{ fontSize: 11.5, lineHeight: 1.5, color: T.faint }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.5, color: T.faint }}>
           Upload prior records as .txt, .docx, or .pdf — the text becomes part of this patient&rsquo;s history.
         </div>
       ) : (
@@ -80,22 +80,22 @@ export function HistoryDocs({
             <div key={d.id}>
               <button
                 onClick={() => setOpenId(openId === d.id ? null : d.id)}
-                style={{ display: "flex", alignItems: "baseline", gap: 6, width: "100%", textAlign: "left", fontSize: 11.5, color: T.body, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                style={{ display: "flex", alignItems: "baseline", gap: 6, width: "100%", textAlign: "left", fontSize: 12.5, color: T.body, background: "none", border: "none", padding: 0, cursor: "pointer" }}
               >
-                <span style={{ font: `600 9px/1 ${T.mono}`, color: T.accent, textTransform: "uppercase" }}>{d.format}</span>
+                <span style={{ font: `600 10px/1 ${T.mono}`, color: T.accent, textTransform: "uppercase" }}>{d.format}</span>
                 {d.ocr && (
                   <span
                     title="Text recognized from a scanned document (OCR) — best-effort, verify against the original."
-                    style={{ font: `600 8.5px/1 ${T.mono}`, color: T.amberInk, background: "#fef3c7", borderRadius: 3, padding: "2px 4px", cursor: "help" }}
+                    style={{ font: `600 9.5px/1 ${T.mono}`, color: T.amberInk, background: "#fef3c7", borderRadius: 3, padding: "2px 4px", cursor: "help" }}
                   >
                     OCR
                   </span>
                 )}
                 <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.filename}</span>
-                <span style={{ color: T.faint, fontSize: 10 }}>{d.uploadedAt.slice(0, 10)}</span>
+                <span style={{ color: T.faint, fontSize: 11 }}>{d.uploadedAt.slice(0, 10)}</span>
               </button>
               {openId === d.id && (
-                <div style={{ marginTop: 4, maxHeight: 180, overflowY: "auto", padding: "8px 10px", background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, fontSize: 11, lineHeight: 1.5, color: T.body, whiteSpace: "pre-wrap" }}>
+                <div style={{ marginTop: 4, maxHeight: 180, overflowY: "auto", padding: "8px 10px", background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, fontSize: 12, lineHeight: 1.5, color: T.body, whiteSpace: "pre-wrap" }}>
                   {d.text}
                 </div>
               )}
@@ -103,7 +103,7 @@ export function HistoryDocs({
           ))}
         </div>
       )}
-      {error && <div style={{ marginTop: 6, fontSize: 11, color: T.amberInk }}>{error}</div>}
+      {error && <div style={{ marginTop: 6, fontSize: 12, color: T.amberInk }}>{error}</div>}
     </div>
   );
 }

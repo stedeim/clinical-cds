@@ -38,13 +38,13 @@ export function CaseList({ cases }: { cases: CaseRow[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search cases — complaint, problem, ref…"
-          className="w-full rounded-xl border border-[#E6E4DB] bg-white px-[15px] py-3 text-[13.5px] text-ink shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)] focus:border-[#CFDCD2] focus:outline-none"
+          className="w-full rounded-xl border border-[#E6E4DB] bg-white px-[15px] py-3 text-[14.5px] text-ink shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)] focus:border-[#CFDCD2] focus:outline-none"
           aria-label="Search cases"
         />
       )}
 
       {visible.length === 0 && (
-        <p className="rounded-[14px] border border-[#E6E4DB] bg-white px-5 py-6 text-sm text-[#bcb7a9]">
+        <p className="rounded-[14px] border border-[#E6E4DB] bg-white px-5 py-6 text-sm text-[#948d7c]">
           {query ? `No cases match “${query}”.` : "No cases yet."}
         </p>
       )}
@@ -58,22 +58,22 @@ export function CaseList({ cases }: { cases: CaseRow[] }) {
             {c.patientLabel}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[14.5px] font-semibold leading-snug text-ink">
+            <span className="block text-[15.5px] font-semibold leading-snug text-ink">
               {c.chiefComplaint || "No chief complaint"}
             </span>
-            <span className="mt-0.5 block truncate text-xs text-[#8b8779]">
+            <span className="mt-0.5 block truncate text-xs text-[#6b665a]">
               {c.problems || "No problems listed"}
               {c.externalRef && (
-                <span className="ml-1.5 font-mono text-[10.5px] text-[#bcb7a9]">{c.externalRef}</span>
+                <span className="ml-1.5 font-mono text-[11.5px] text-[#948d7c]">{c.externalRef}</span>
               )}
               {c.isTestCase && (
-                <span className="ml-1.5 rounded bg-[#F6EACB] px-1.5 py-0.5 text-[10px] font-semibold text-caution">
+                <span className="ml-1.5 rounded bg-[#F6EACB] px-1.5 py-0.5 text-[11px] font-semibold text-caution">
                   test case
                 </span>
               )}
             </span>
           </span>
-          <span className="shrink-0 text-[13px] font-semibold text-clinical">Open →</span>
+          <span className="shrink-0 text-[14px] font-semibold text-clinical">Open →</span>
         </a>
       ))}
     </div>

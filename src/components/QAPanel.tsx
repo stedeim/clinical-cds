@@ -85,7 +85,7 @@ export function QAPanel({
             <button
               key={s}
               onClick={() => setQuestion(s)}
-              className="rounded-full border border-[#E6E4DB] px-2.5 py-1 text-xs text-[#8b8779] hover:bg-[#FBFAF6]"
+              className="rounded-full border border-[#E6E4DB] px-2.5 py-1 text-xs text-[#6b665a] hover:bg-[#FBFAF6]"
             >
               {s}
             </button>

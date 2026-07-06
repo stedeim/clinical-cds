@@ -50,31 +50,31 @@ export function AllergySuggestions({
     <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
       {visible.map((s) => (
         <div key={s.substance} style={{ padding: "9px 11px", background: T.amberBg, border: `1px solid ${T.amberLine}`, borderRadius: 10 }}>
-          <div style={{ font: `600 11.5px/1.4 ${T.sans}`, color: T.amberInk }}>
+          <div style={{ font: `600 12.5px/1.4 ${T.sans}`, color: T.amberInk }}>
             Document mentions a possible <b>{s.substance}</b> allergy
           </div>
-          <div style={{ fontSize: 10.5, color: T.amberInk, opacity: 0.85, lineHeight: 1.45, marginTop: 3, fontStyle: "italic" }}>
+          <div style={{ fontSize: 11.5, color: T.amberInk, opacity: 0.85, lineHeight: 1.45, marginTop: 3, fontStyle: "italic" }}>
             &ldquo;{s.context}&rdquo;
-            <span style={{ font: `500 9.5px ${T.mono}`, fontStyle: "normal", marginLeft: 5 }}>— {s.documentName}</span>
+            <span style={{ font: `500 10.5px ${T.mono}`, fontStyle: "normal", marginLeft: 5 }}>— {s.documentName}</span>
           </div>
           <div style={{ display: "flex", gap: 6, marginTop: 7 }}>
             <button
               onClick={() => add(s)}
               disabled={busy === s.substance}
-              style={{ font: `600 11px/1 ${T.sans}`, color: "#fff", background: T.accent, border: "none", borderRadius: 7, padding: "6px 11px", cursor: "pointer" }}
+              style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: T.accent, border: "none", borderRadius: 7, padding: "6px 11px", cursor: "pointer" }}
             >
               {busy === s.substance ? "Adding…" : "Add to record"}
             </button>
             <button
               onClick={() => setDismissed((prev) => new Set(prev).add(s.substance))}
-              style={{ font: `600 11px/1 ${T.sans}`, color: T.amberInk, background: "none", border: `1px solid ${T.amberLine}`, borderRadius: 7, padding: "6px 10px", cursor: "pointer" }}
+              style={{ font: `600 12px/1 ${T.sans}`, color: T.amberInk, background: "none", border: `1px solid ${T.amberLine}`, borderRadius: 7, padding: "6px 10px", cursor: "pointer" }}
             >
               Dismiss
             </button>
           </div>
         </div>
       ))}
-      {error && <div style={{ fontSize: 11, color: T.amberInk }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: T.amberInk }}>{error}</div>}
     </div>
   );
 }

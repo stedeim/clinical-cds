@@ -35,8 +35,8 @@ export function TranscriptInput({
   return (
     <div style={{ marginBottom: 16, padding: "12px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 7 }}>
-        <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>Dictate or paste visit transcript</div>
-        <button onClick={() => onText(DEMO_TRANSCRIPT)} style={{ font: `500 10.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+        <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted }}>Dictate or paste visit transcript</div>
+        <button onClick={() => onText(DEMO_TRANSCRIPT)} style={{ font: `500 11.5px/1 ${T.sans}`, color: T.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           use sample
         </button>
       </div>
@@ -48,28 +48,28 @@ export function TranscriptInput({
         onChange={(e) => onText(e.target.value)}
         placeholder={"DR: What brings you in today?\nPT: I've had a cough for about a week..."}
         rows={5}
-        style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 12.5px/1.5 ${T.mono}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
+        style={{ width: "100%", boxSizing: "border-box", resize: "vertical", font: `400 13.5px/1.5 ${T.mono}`, color: T.ink, background: "#fff", border: `1px solid ${T.line}`, borderRadius: 8, padding: "9px 11px" }}
       />
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 9, flexWrap: "wrap" }}>
         <button
           onClick={onGround}
           disabled={loading || text.trim().length === 0}
-          style={{ font: `600 12px/1 ${T.sans}`, color: "#fff", background: text.trim() ? T.accent : T.faint, border: "none", borderRadius: 8, padding: "8px 14px", cursor: text.trim() && !loading ? "pointer" : "default" }}
+          style={{ font: `600 13px/1 ${T.sans}`, color: "#fff", background: text.trim() ? T.accent : T.faint, border: "none", borderRadius: 8, padding: "8px 14px", cursor: text.trim() && !loading ? "pointer" : "default" }}
         >
           {loading ? "Grounding…" : "Ground note"}
         </button>
         <button
           onClick={onSummarize}
           disabled={summarizing || text.trim().length < 20}
-          style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: text.trim().length >= 20 && !summarizing ? "pointer" : "default", opacity: text.trim().length >= 20 ? 1 : 0.5 }}
+          style={{ font: `600 13px/1 ${T.sans}`, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: text.trim().length >= 20 && !summarizing ? "pointer" : "default", opacity: text.trim().length >= 20 ? 1 : 0.5 }}
         >
           {summarizing ? "Summarizing…" : "Summarize"}
         </button>
-        <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>
+        <span style={{ fontSize: 12, color: T.muted, lineHeight: 1.4 }}>
           Only these text lines reach Pabaid — audio never does. Lines become <b style={{ color: T.accentInk }}>spoken</b> spans in the note.
         </span>
       </div>
-      {error && <div style={{ marginTop: 8, fontSize: 11.5, color: T.amberInk }}>{error}</div>}
+      {error && <div style={{ marginTop: 8, fontSize: 12.5, color: T.amberInk }}>{error}</div>}
     </div>
   );
 }
@@ -88,12 +88,12 @@ export function GroundedTranscript({
   return (
     <div style={{ marginBottom: 16, padding: "11px 13px", background: T.accentBg2, border: `1px solid ${T.accentLine}`, borderRadius: 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk }}>Transcript</div>
+        <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk }}>Transcript</div>
         {showSummarize && (
           <button
             onClick={onSummarize}
             disabled={summarizing}
-            style={{ font: `600 10.5px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 7, padding: "5px 9px", cursor: "pointer" }}
+            style={{ font: `600 11.5px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 7, padding: "5px 9px", cursor: "pointer" }}
           >
             {summarizing ? "Summarizing…" : "Summarize — skip the fluff"}
           </button>
@@ -101,8 +101,8 @@ export function GroundedTranscript({
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
         {segments.map((seg) => (
-          <div key={seg.id} style={{ fontSize: 12, lineHeight: 1.45, color: T.body }}>
-            <span style={{ font: `600 10px/1 ${T.sans}`, textTransform: "uppercase", letterSpacing: ".05em", color: seg.speaker === "patient" ? T.accent : T.muted, marginRight: 6 }}>
+          <div key={seg.id} style={{ fontSize: 13, lineHeight: 1.45, color: T.body }}>
+            <span style={{ font: `600 11px/1 ${T.sans}`, textTransform: "uppercase", letterSpacing: ".05em", color: seg.speaker === "patient" ? T.accent : T.muted, marginRight: 6 }}>
               {seg.speaker === "clinician" ? "Dr" : seg.speaker === "patient" ? "Pt" : "—"}
             </span>
             {seg.text}

@@ -28,7 +28,7 @@ function Bucket({
   if (points.length === 0) return null;
   return (
     <div>
-      <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk, marginBottom: 5 }}>
+      <div style={{ font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accentInk, marginBottom: 5 }}>
         {title}
       </div>
       <ul style={{ margin: "0 0 2px", paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
@@ -36,10 +36,10 @@ function Bucket({
           <li
             key={i}
             title={sourceTitle(p, segments)}
-            style={{ fontSize: 12.5, lineHeight: 1.5, color: T.body, cursor: "help" }}
+            style={{ fontSize: 13.5, lineHeight: 1.5, color: T.body, cursor: "help" }}
           >
             {p.text}
-            <sup style={{ font: `600 8.5px ${T.mono}`, color: T.faint, marginLeft: 3 }}>
+            <sup style={{ font: `600 9.5px ${T.mono}`, color: T.faint, marginLeft: 3 }}>
               {p.segmentIds.length > 1 ? `×${p.segmentIds.length}` : "†"}
             </sup>
           </li>
@@ -62,8 +62,8 @@ export function SummaryCard({
   return (
     <div style={{ marginBottom: 16, padding: "13px 15px", background: T.accentBg2, border: `1px solid ${T.accentLine}`, borderRadius: 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ font: `600 14px/1 ${T.serif}`, color: T.ink }}>Visit summary</div>
-        <div style={{ fontSize: 10, color: T.faint }}>
+        <div style={{ font: `600 15px/1 ${T.serif}`, color: T.ink }}>Visit summary</div>
+        <div style={{ fontSize: 11, color: T.faint }}>
           {summary.model === "mock" ? (
             <span style={{ color: T.amberInk, background: T.amberBg, borderRadius: 4, padding: "2px 6px", fontWeight: 600 }}>
               stub mode — extractive
@@ -76,7 +76,7 @@ export function SummaryCard({
       </div>
 
       {total === 0 ? (
-        <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.5 }}>
           Nothing clinically salient found in this transcript — honestly nothing, rather than a padded summary.
         </div>
       ) : (

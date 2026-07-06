@@ -112,7 +112,7 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
 
   if (!supported) {
     return (
-      <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.5, marginBottom: 8 }}>
+      <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 8 }}>
         Voice dictation isn&rsquo;t available in this browser (try Chrome). You can still paste or type the transcript below.
       </div>
     );
@@ -121,7 +121,7 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
   return (
     <div style={{ marginBottom: 9 }}>
       {!consented ? (
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 11.5, color: T.body, lineHeight: 1.5, cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: T.body, lineHeight: 1.5, cursor: "pointer" }}>
           <input
             type="checkbox"
             checked={consented}
@@ -140,7 +140,7 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
               display: "flex",
               alignItems: "center",
               gap: 7,
-              font: `600 12px/1 ${T.sans}`,
+              font: `600 13px/1 ${T.sans}`,
               color: recording ? T.rec : "#fff",
               background: recording ? T.recBg : T.accent,
               border: recording ? `1px solid ${T.rec}` : "none",
@@ -164,24 +164,24 @@ export function Dictation({ onSegment }: { onSegment: (line: string) => void }) 
           {recording && lastSpeaker && (
             <span
               title="Speaker inferred from what was said — edit the DR:/PT: prefix below if it guessed wrong."
-              style={{ font: `600 11px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 6, padding: "6px 10px", cursor: "help" }}
+              style={{ font: `600 12px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 6, padding: "6px 10px", cursor: "help" }}
             >
               last: {lastSpeaker === "DR" ? "Doctor" : "Patient"}
             </span>
           )}
 
           {recording && (
-            <span style={{ fontSize: 11.5, color: interim ? T.body : T.faint, fontStyle: interim ? "normal" : "italic", flex: 1, minWidth: 120 }}>
+            <span style={{ fontSize: 12.5, color: interim ? T.body : T.faint, fontStyle: interim ? "normal" : "italic", flex: 1, minWidth: 120 }}>
               {interim || "listening…"}
             </span>
           )}
         </div>
       )}
 
-      <div style={{ marginTop: 6, fontSize: 10, color: T.faint, lineHeight: 1.45 }}>
+      <div style={{ marginTop: 6, fontSize: 11, color: T.faint, lineHeight: 1.45 }}>
         Speaker labels (DR/PT) are inferred from what&rsquo;s said — fix any wrong prefix right in the text below. Demo dictation — uses the browser&rsquo;s speech engine (audio may be processed by the browser vendor). Not for real patient conversations until a BAA-covered transcription provider is connected.
       </div>
-      {error && <div style={{ marginTop: 6, fontSize: 11, color: T.amberInk }}>{error}</div>}
+      {error && <div style={{ marginTop: 6, fontSize: 12, color: T.amberInk }}>{error}</div>}
     </div>
   );
 }

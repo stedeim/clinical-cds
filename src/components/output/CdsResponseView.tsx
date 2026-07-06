@@ -50,7 +50,7 @@ export function CdsResponseView({
           {response.dataPointsUsed.map((d, i) => (
             <li key={i} className="text-sm">
               <span className="font-medium text-ink">{d.label}</span>
-              <span className="text-[#8b8779]"> — {d.relevance}</span>
+              <span className="text-[#6b665a]"> — {d.relevance}</span>
             </li>
           ))}
         </ul>
@@ -83,7 +83,7 @@ export function CdsResponseView({
                   <span className="font-medium text-ink">{w.test}</span>
                   <EvidenceTag e={w.evidence} />
                 </div>
-                <p className="text-[#8b8779]">{w.rationale}</p>
+                <p className="text-[#6b665a]">{w.rationale}</p>
               </li>
             ))}
           </ul>
@@ -128,7 +128,7 @@ export function CdsResponseView({
                 {response.teaching.map((t, i) => (
                   <li key={i} className="rounded-md bg-[#FBFAF6] p-3 text-sm">
                     <p className="font-medium text-ink">{t.point}</p>
-                    <p className="text-[#8b8779]">{t.basis}</p>
+                    <p className="text-[#6b665a]">{t.basis}</p>
                   </li>
                 ))}
               </ul>
@@ -163,14 +163,14 @@ export function CdsResponseView({
                 ) : (
                   <span className="text-ink">{c.title}</span>
                 )}
-                <span className="text-[#bcb7a9]"> · {c.source}</span>
+                <span className="text-[#948d7c]"> · {c.source}</span>
               </li>
             ))}
           </ul>
         </Block>
       )}
 
-      <p className="rounded-md bg-[#F1F0EB] px-4 py-3 text-xs leading-relaxed text-[#8b8779]">
+      <p className="rounded-md bg-[#F1F0EB] px-4 py-3 text-xs leading-relaxed text-[#6b665a]">
         {response.disclaimer}
       </p>
     </article>
@@ -191,7 +191,7 @@ function DiffGroup({
       ? "text-danger"
       : tone === "clinical"
         ? "text-clinical"
-        : "text-[#8b8779]";
+        : "text-[#6b665a]";
   return (
     <div>
       <h4 className={`text-xs font-semibold uppercase tracking-wide ${toneClass}`}>{label}</h4>
@@ -202,7 +202,7 @@ function DiffGroup({
               <span className="font-medium text-ink">{d.condition}</span>
               <EvidenceTag e={d.evidence} />
             </div>
-            <p className="text-[#8b8779]">{d.rationale}</p>
+            <p className="text-[#6b665a]">{d.rationale}</p>
           </li>
         ))}
       </ul>
@@ -215,10 +215,10 @@ function EvidenceTag({ e }: { e: EvidenceStrength }) {
     strong: "bg-emerald-100 text-emerald-800",
     moderate: "bg-sky-100 text-sky-800",
     weak: "bg-amber-100 text-caution",
-    uncertain: "bg-[#EEEDE6] text-[#8b8779]",
+    uncertain: "bg-[#EEEDE6] text-[#6b665a]",
   };
   return (
-    <span className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${map[e]}`}>{e}</span>
+    <span className={`rounded px-1.5 py-0.5 text-[12px] font-medium ${map[e]}`}>{e}</span>
   );
 }
 
@@ -226,7 +226,7 @@ function PerksList({ label, items, tone }: { label: string; items: string[]; ton
   if (!items.length) return null;
   return (
     <div>
-      <p className="text-xs font-semibold text-[#bcb7a9]">{label}</p>
+      <p className="text-xs font-semibold text-[#948d7c]">{label}</p>
       <ul className={`mt-0.5 list-disc pl-4 text-sm ${tone}`}>
         {items.map((it, i) => (
           <li key={i}>{it}</li>
@@ -245,7 +245,7 @@ function CopyNoteButton({ response }: { response: CdsResponse }) {
     });
   }
   return (
-    <button onClick={copy} className="rounded border border-[#E6E4DB] px-2 py-0.5 text-xs text-[#8b8779] hover:bg-[#FBFAF6]">
+    <button onClick={copy} className="rounded border border-[#E6E4DB] px-2 py-0.5 text-xs text-[#6b665a] hover:bg-[#FBFAF6]">
       {copied ? "Copied" : "Copy as note"}
     </button>
   );
