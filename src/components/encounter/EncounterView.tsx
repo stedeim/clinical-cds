@@ -429,7 +429,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                     const min = Math.min(...values);
                     const max = Math.max(...values);
                     const range = max - min || 1;
-                    const w = 72;
+                    const w = 48;
                     const h = 18;
                     const step = values.length > 1 ? w / (values.length - 1) : w;
                     const path = values
@@ -438,7 +438,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                     const rising = values[values.length - 1] > values[0];
                     return (
                       <div key={t.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
-                        <span style={{ color: T.muted, width: 92, flexShrink: 0 }}>{t.name}</span>
+                        <span style={{ color: T.muted, width: 68, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
                         <svg width={w} height={h + 2} style={{ flexShrink: 0 }} aria-hidden>
                           <path d={path} fill="none" stroke={T.accent} strokeWidth="1.5" />
                         </svg>
