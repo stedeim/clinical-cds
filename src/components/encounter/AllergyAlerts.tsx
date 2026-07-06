@@ -1,22 +1,13 @@
 "use client";
 
 import type { AllergyFindingT } from "@/lib/allergy/engine";
+import { T } from "@/lib/ui/tokens";
 
 // Allergy conflict banners. Red for direct/class conflicts, amber for
 // documented cross-reactivity. Read-only cautions — resolving one means
 // changing the med or confirming tolerance, both of which happen in the
 // chart, not in a dismiss button. Every banner states its class-membership
 // basis so the reasoning is checkable at a glance.
-
-const T = {
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  redInk: "#8f2e24",
-  redBg: "#fbedea",
-  redLine: "#e7b3a8",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  amberLine: "#fcd34d",
-};
 
 export function AllergyAlerts({ findings }: { findings: AllergyFindingT[] }) {
   if (findings.length === 0) return null;

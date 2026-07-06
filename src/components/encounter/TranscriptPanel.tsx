@@ -2,27 +2,11 @@
 
 import type { TranscriptSegment } from "@/lib/note/schema";
 import { Dictation } from "@/components/encounter/Dictation";
+import { T } from "@/lib/ui/tokens";
 
 // The transcript panel — dictate/paste input before grounding, and the
 // grounded segment list after. Extracted from NoteCard; all state stays in
 // NoteCard (the note, export, and signature flows depend on it).
-
-const T = {
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  panelBg: "#F6F8F7",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentBg2: "#eef6f7",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 const DEMO_TRANSCRIPT = [
   "PT: The cough started about five days ago, mostly at night.",

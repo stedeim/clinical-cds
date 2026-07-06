@@ -2,23 +2,11 @@
 
 import { useRef, useState } from "react";
 import type { PatientDocument } from "@/lib/history/store";
+import { T } from "@/lib/ui/tokens";
 
 // Patient-history documents in the chart rail: upload (.txt / .docx / .pdf)
 // and an expandable list of extracted text. Files are parsed server-side and
 // the bytes discarded — what's stored and shown is the extracted text.
-
-const T = {
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  accent: "#0e7490",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 type DocRow = Pick<PatientDocument, "id" | "filename" | "format" | "ocr" | "uploadedAt" | "text">;
 

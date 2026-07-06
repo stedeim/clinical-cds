@@ -55,13 +55,13 @@ export function QAPanel({
 
   return (
     <section className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
+      <div className="rounded-lg border border-[#E6E4DB] bg-white p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">Ask about this patient</h2>
           <select
             value={framework}
             onChange={(e) => setFramework(e.target.value as GuidelineFramework)}
-            className="rounded border border-slate-300 px-2 py-1 text-sm"
+            className="rounded border border-[#E6E4DB] px-2 py-1 text-sm"
             aria-label="Guideline framework"
           >
             {FRAMEWORK_OPTIONS.map((f) => (
@@ -77,7 +77,7 @@ export function QAPanel({
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="e.g. Given this patient, what should I consider?"
           rows={3}
-          className="w-full resize-none rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-clinical focus:outline-none"
+          className="w-full resize-none rounded-md border border-[#E6E4DB] px-3 py-2 text-sm focus:border-clinical focus:outline-none"
         />
 
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -85,7 +85,7 @@ export function QAPanel({
             <button
               key={s}
               onClick={() => setQuestion(s)}
-              className="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-50"
+              className="rounded-full border border-[#E6E4DB] px-2.5 py-1 text-xs text-[#8b8779] hover:bg-[#FBFAF6]"
             >
               {s}
             </button>

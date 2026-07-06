@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FollowUp, FollowUpRecipientT } from "@/lib/followup/schema";
 import type { FollowUpSuggestion } from "@/lib/followup/suggest";
+import { T } from "@/lib/ui/tokens";
 
 // Follow-up reminders card (client island).
 //
@@ -12,26 +13,6 @@ import type { FollowUpSuggestion } from "@/lib/followup/suggest";
 // LLM); the clinician always confirms and edits before anything is created.
 // "Send now" routes through the dispatch seam — in stub mode that records an
 // auditable event and says so honestly; it never pretends an SMS went out.
-
-const T = {
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  panelBg: "#F6F8F7",
-  card: "#ffffff",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentBg2: "#eef6f7",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  serif: "'Newsreader',ui-serif,Georgia,serif",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 const RECIPIENTS: { id: FollowUpRecipientT; label: string }[] = [
   { id: "patient", label: "Patient" },
@@ -118,7 +99,7 @@ export function FollowUpCard({
   const canCreate = action.trim().length >= 3 && recipients.length > 0 && !busy;
 
   return (
-    <div style={{ background: T.card, borderRadius: 16, padding: "18px 20px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)", marginTop: 16 }}>
+    <div style={{ background: T.card, borderRadius: 16, padding: "18px 20px", boxShadow: T.shadow, marginTop: 16 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", borderBottom: `1px solid ${T.line}`, paddingBottom: 10, marginBottom: 13 }}>
         <div style={{ font: `600 16px/1 ${T.serif}`, color: T.ink }}>Follow-up reminders</div>
         <div style={{ fontSize: 10.5, color: T.faint }}>you choose who gets reminded</div>

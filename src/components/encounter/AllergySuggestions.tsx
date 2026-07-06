@@ -3,23 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AllergySuggestion } from "@/lib/history/allergy-scan";
+import { T } from "@/lib/ui/tokens";
 
 // Document-scan allergy suggestions: "this document mentions X — add it?"
 // The scan proposes with the source sentence shown; only the clinician's
 // click writes the record. Adding refreshes the page so the conflict engine
 // re-runs server-side against the updated allergy list.
-
-const T = {
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  amberLine: "#fcd34d",
-  accent: "#0e7490",
-};
 
 export function AllergySuggestions({
   encounterId,

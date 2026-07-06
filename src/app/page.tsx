@@ -32,21 +32,26 @@ export default async function HomePage() {
       return rank[a.status] - rank[b.status] || a.followUp.dueAt.localeCompare(b.followUp.dueAt);
     });
 
+  const chasing = followUpItems.filter((i) => i.status !== "upcoming").length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-[860px] space-y-5">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Your cases</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Select a case to ask encounter-native questions about that patient.
+          <h1 className="font-serif text-[26px] font-semibold leading-tight tracking-tight text-ink">
+            Your cases
+          </h1>
+          <p className="mt-1 text-[13px] text-[#8b8779]">
+            {cases.length} case{cases.length === 1 ? "" : "s"}
+            {chasing > 0 && <> · {chasing} follow-up{chasing === 1 ? "" : "s"} need chasing</>}
           </p>
         </div>
         {user && (
           <a
             href="/cases/new"
-            className="rounded-md bg-clinical px-4 py-2 text-sm font-medium text-white"
+            className="rounded-[10px] bg-clinical px-[18px] py-[11px] text-[13px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(78,107,87,.55)]"
           >
-            New case
+            + New case
           </a>
         )}
       </div>
@@ -67,7 +72,7 @@ export default async function HomePage() {
         )}
       />
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-[#bcb7a9]">
         Stub mode: one seeded demo case. With Supabase configured, this lists the
         signed-in clinician&apos;s own cases (RLS-scoped).
       </p>

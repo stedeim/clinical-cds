@@ -2,25 +2,11 @@
 
 import type { CSSProperties } from "react";
 import type { NoteSpan } from "@/lib/note/schema";
+import { T } from "@/lib/ui/tokens";
 
 // Note-section presentation primitives, extracted from NoteCard:
 // provenance-driven span styling (the moat's visual layer), section headers
 // with the in-place edit affordance, and the section plain-text editor.
-
-const T = {
-  ink: "#0f2b31",
-  muted: "#7c9096",
-  line: "#E4E9E8",
-  panelBg: "#F6F8F7",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 export function sectionLabel(): CSSProperties {
   return { font: `700 10.5px/1 ${T.sans}`, letterSpacing: ".12em", textTransform: "uppercase", color: T.accent };
@@ -58,6 +44,9 @@ export function SpanText({ span }: { span: NoteSpan }) {
   return (
     <span style={spanStyle(span.provenance)} title={spanTitle(span.provenance)}>
       {span.text}
+      {span.provenance === "inferred" && (
+        <sup style={{ font: `700 9px/1 ${T.mono}`, color: "#9a7a1e", marginLeft: 1 }}>AI</sup>
+      )}
     </span>
   );
 }

@@ -17,9 +17,9 @@ export interface DashboardItem {
 }
 
 const STATUS_STYLE: Record<DueStatus, { label: string; className: string }> = {
-  overdue: { label: "overdue", className: "bg-red-100 text-red-800" },
-  due_soon: { label: "due soon", className: "bg-amber-100 text-amber-800" },
-  upcoming: { label: "upcoming", className: "bg-slate-100 text-slate-600" },
+  overdue: { label: "overdue", className: "bg-[#FBEEEB] text-danger" },
+  due_soon: { label: "due soon", className: "bg-[#F6EACB] text-caution" },
+  upcoming: { label: "upcoming", className: "bg-[#FBFAF6] text-[#8b8779]" },
 };
 
 export function FollowUpDashboard({ items: initialItems }: { items: DashboardItem[] }) {
@@ -56,22 +56,24 @@ export function FollowUpDashboard({ items: initialItems }: { items: DashboardIte
   if (items.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white">
-      <div className="flex items-baseline justify-between border-b border-slate-200 px-5 py-3">
-        <h2 className="font-semibold text-ink">Follow-ups</h2>
-        <span className="text-xs text-slate-400">across all cases · worst first</span>
+    <div className="overflow-hidden rounded-[14px] bg-white shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)]">
+      <div className="flex items-baseline justify-between border-b border-[#EEEDE6] px-4 py-3">
+        <h2 className="font-serif text-[15px] font-semibold text-ink">Follow-ups</h2>
+        <span className="text-[11px] text-[#bcb7a9]">across all cases · worst first</span>
       </div>
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-[#FBFAF6]">
         {items.map(({ followUp: f, status, caseLabel }) => (
-          <li key={f.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[status].className}`}>
+          <li key={f.id} className="flex flex-wrap items-center gap-2.5 px-4 py-[11px] text-[13px]">
+            <span
+              className={`shrink-0 rounded-xl px-[9px] py-1 text-[10px] font-semibold ${STATUS_STYLE[status].className}`}
+            >
               {STATUS_STYLE[status].label}
             </span>
-            <span className="flex-1 leading-snug text-slate-700">
+            <span className="flex-1 leading-snug text-body">
               {f.action}
-              <span className="ml-2 text-xs text-slate-400">
+              <span className="ml-2 text-[11px] text-[#8b8779]">
                 due {f.dueAt.slice(0, 10)} ·{" "}
-                <a href={`/cases/${f.encounterId}`} className="text-clinical underline">
+                <a href={`/cases/${f.encounterId}`} className="text-[#3c5646] underline">
                   {caseLabel}
                 </a>
               </span>
@@ -80,23 +82,23 @@ export function FollowUpDashboard({ items: initialItems }: { items: DashboardIte
               <button
                 onClick={() => act("send", f.id)}
                 disabled={busy === f.id}
-                className="rounded border border-slate-300 px-2.5 py-1 text-xs font-medium text-clinical hover:border-clinical disabled:opacity-40"
+                className="rounded-[7px] border border-[#CFDCD2] bg-[#F5F7F4] px-2.5 py-1.5 text-[11px] font-semibold text-clinical disabled:opacity-40"
               >
                 Send reminder
               </button>
             )}
-            {f.status === "sent" && <span className="text-xs text-slate-400">reminder sent</span>}
+            {f.status === "sent" && <span className="text-[11px] text-[#bcb7a9]">reminder sent</span>}
             <button
               onClick={() => act("complete", f.id)}
               disabled={busy === f.id}
-              className="rounded border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 hover:border-slate-500 disabled:opacity-40"
+              className="rounded-[7px] border border-[#E6E4DB] px-2.5 py-1.5 text-[11px] font-semibold text-[#8b8779] hover:border-[#bcb7a9] disabled:opacity-40"
             >
               Mark done
             </button>
           </li>
         ))}
       </ul>
-      {notice && <p className="border-t border-slate-100 px-5 py-2.5 text-xs text-slate-500">{notice}</p>}
+      {notice && <p className="border-t border-[#EEEDE6] px-4 py-2.5 text-xs text-[#8b8779]">{notice}</p>}
     </div>
   );
 }

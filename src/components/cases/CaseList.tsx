@@ -32,50 +32,50 @@ export function CaseList({ cases }: { cases: CaseRow[] }) {
   }, [cases, query]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {cases.length > 3 && (
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search cases — complaint, problem, ref…"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-clinical focus:outline-none"
+          className="w-full rounded-xl border border-[#E6E4DB] bg-white px-[15px] py-3 text-[13.5px] text-ink shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)] focus:border-[#CFDCD2] focus:outline-none"
           aria-label="Search cases"
         />
       )}
 
-      <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-        {visible.length === 0 && (
-          <li className="px-5 py-6 text-sm text-slate-400">
-            {query ? `No cases match “${query}”.` : "No cases yet."}
-          </li>
-        )}
-        {visible.map((c) => (
-          <li key={c.encounterId}>
-            <a
-              href={`/cases/${c.encounterId}`}
-              className="flex items-center justify-between px-5 py-4 hover:bg-slate-50"
-            >
-              <div>
-                <p className="font-medium text-ink">
-                  {c.patientLabel} · {c.chiefComplaint || "No chief complaint"}
-                </p>
-                <p className="mt-0.5 text-sm text-slate-500">
-                  {c.problems || "No problems listed"}
-                  {c.externalRef && (
-                    <span className="ml-2 font-mono text-xs text-slate-400">{c.externalRef}</span>
-                  )}
-                  {c.isTestCase && (
-                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-caution">
-                      test case
-                    </span>
-                  )}
-                </p>
-              </div>
-              <span className="text-clinical">Open →</span>
-            </a>
-          </li>
-        ))}
-      </ul>
+      {visible.length === 0 && (
+        <p className="rounded-[14px] border border-[#E6E4DB] bg-white px-5 py-6 text-sm text-[#bcb7a9]">
+          {query ? `No cases match “${query}”.` : "No cases yet."}
+        </p>
+      )}
+      {visible.map((c) => (
+        <a
+          key={c.encounterId}
+          href={`/cases/${c.encounterId}`}
+          className="flex items-center gap-4 rounded-[14px] bg-white px-4 py-[14px] shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)] transition-transform hover:-translate-y-px"
+        >
+          <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#EEF2EE] text-xs font-semibold text-[#3c5646]">
+            {c.patientLabel}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14.5px] font-semibold leading-snug text-ink">
+              {c.chiefComplaint || "No chief complaint"}
+            </span>
+            <span className="mt-0.5 block truncate text-xs text-[#8b8779]">
+              {c.problems || "No problems listed"}
+              {c.externalRef && (
+                <span className="ml-1.5 font-mono text-[10.5px] text-[#bcb7a9]">{c.externalRef}</span>
+              )}
+              {c.isTestCase && (
+                <span className="ml-1.5 rounded bg-[#F6EACB] px-1.5 py-0.5 text-[10px] font-semibold text-caution">
+                  test case
+                </span>
+              )}
+            </span>
+          </span>
+          <span className="shrink-0 text-[13px] font-semibold text-clinical">Open →</span>
+        </a>
+      ))}
     </div>
   );
 }

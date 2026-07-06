@@ -24,6 +24,7 @@ import { suggestFollowUps } from "@/lib/followup/suggest";
 import { listFollowUps } from "@/lib/followup/store";
 import { FollowUpCard } from "@/components/encounter/FollowUpCard";
 import { headers } from "next/headers";
+import { T } from "@/lib/ui/tokens";
 
 // Encounter screen — the synthesized "best of three" direction graduated onto
 // real case data (see /design/best for the standalone mock and its rationale).
@@ -43,35 +44,10 @@ import { headers } from "next/headers";
 //   • Left rail ← the real chart; transcript is a labeled "coming soon" stub.
 //   • Right col ← the real, working Q&A engine (<QAPanel>).
 //
-// Visual language: Newsreader serif for headings, IBM Plex Mono for hard data,
-// one accent = the app's clinical teal (#0e7490), rounded white cards on a calm
-// canvas. Amber (caution) is reserved for inferred text and dose cautions.
-
-const FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
-
-const T = {
-  canvas: "#EDF0EF",
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  panelBg: "#F6F8F7",
-  card: "#ffffff",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentBg2: "#eef6f7",
-  accentLine: "#c9e2e6",
-  // caution / inferred (amber)
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  amberLine: "#fcd34d",
-  serif: "'Newsreader',ui-serif,Georgia,serif",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
+// Visual language (v2, warm paper): Newsreader serif for headings, Hanken
+// Grotesk for UI, IBM Plex Mono for hard data, one accent = deep green
+// (#4E6B57), white cards on a warm canvas. Amber is reserved for inferred
+// text and cautions. Fonts load globally via next/font in app/layout.
 
 function sexInitial(sex?: string): string {
   return sex === "female" ? "F" : sex === "male" ? "M" : sex === "intersex" ? "I" : "";
@@ -81,56 +57,62 @@ function sexInitial(sex?: string): string {
 // from PUBLIC datasets (CMS Part D, OpenPrescribing, PBS/CIHI) — what peers
 // commonly prescribe in this region, never what to prescribe. Percentages
 // arrive only when Pabaid's own opt-in network accumulates real data.
-function RegionalPatternCard({ pattern }: { pattern: RegionalPattern }) {
+function RegionalPatternCard({ pattern, defaultOpen }: { pattern: RegionalPattern; defaultOpen?: boolean }) {
   return (
-    <div style={{ background: T.card, borderRadius: 16, padding: "17px 18px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 11 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${T.accent}` }} />
+    <details open={defaultOpen} style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, overflow: "hidden" }}>
+      <summary style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 16px", cursor: "pointer", font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, listStyle: "none" }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${T.accent}`, flexShrink: 0 }} />
         Regional patterns · {pattern.regionLabel}
+        <span style={{ marginLeft: "auto", font: `400 10px/1 ${T.mono}`, color: T.faint, letterSpacing: 0, textTransform: "none", whiteSpace: "nowrap" as const }}>{pattern.source}</span>
+      </summary>
+      <div style={{ padding: "2px 17px 15px" }}>
+        <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>
+          {pattern.conditionLabel} — what peers commonly prescribe
+        </div>
+        <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
+          {pattern.bullets.map((b, i) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+          <span style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
+            {pattern.source}
+          </span>
+          <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>descriptive — not a recommendation</span>
+        </div>
       </div>
-      <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>
-        {pattern.conditionLabel} — what peers commonly prescribe
-      </div>
-      <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
-        {pattern.bullets.map((b, i) => (
-          <li key={i}>{b}</li>
-        ))}
-      </ul>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-        <span style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
-          {pattern.source}
-        </span>
-        <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>descriptive — not a recommendation</span>
-      </div>
-    </div>
+    </details>
   );
 }
 
 // Auto-surfaced guideline card (Moat 4's unprompted half). Content comes from
 // the curated, cited library — never generated. Rendered only when a chart
 // problem actually matches a library topic; silence otherwise.
-function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
+function CheatSheetCard({ sheet, defaultOpen }: { sheet: CheatSheet; defaultOpen?: boolean }) {
   return (
-    <div style={{ background: T.card, borderRadius: 16, padding: "17px 18px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 11 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent }} />
-        Auto-surfaced · {sheet.topic}
+    <details open={defaultOpen} style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, overflow: "hidden" }}>
+      <summary style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 16px", cursor: "pointer", font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, listStyle: "none" }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.accent, flexShrink: 0 }} />
+        Surfaced for you · {sheet.topic}
+        <span style={{ marginLeft: "auto", font: `400 10px/1 ${T.mono}`, color: T.faint, letterSpacing: 0, textTransform: "none", whiteSpace: "nowrap" as const }}>cited from library</span>
+      </summary>
+      <div style={{ padding: "2px 17px 15px" }}>
+        <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>{sheet.title}</div>
+        <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
+          {sheet.bullets.map((b, i) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+          {sheet.sources.map((s) => (
+            <span key={s} style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
+              {s}
+            </span>
+          ))}
+          <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>cited from library</span>
+        </div>
       </div>
-      <div style={{ font: `600 16px/1.3 ${T.serif}`, color: T.ink, marginBottom: 9 }}>{sheet.title}</div>
-      <ul style={{ margin: 0, paddingLeft: 17, fontSize: 12.5, lineHeight: 1.65, color: T.body }}>
-        {sheet.bullets.map((b, i) => (
-          <li key={i}>{b}</li>
-        ))}
-      </ul>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-        {sheet.sources.map((s) => (
-          <span key={s} style={{ font: `600 10px ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 4, padding: "3px 8px" }}>
-            {s}
-          </span>
-        ))}
-        <span style={{ font: `400 10px ${T.mono}`, color: T.faint, marginLeft: "auto" }}>cited from library</span>
-      </div>
-    </div>
+    </details>
   );
 }
 
@@ -140,7 +122,7 @@ function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
 function HandoutsCard({ handouts }: { handouts: Handout[] }) {
   if (handouts.length === 0) return null;
   return (
-    <div style={{ background: T.card, borderRadius: 16, padding: "15px 18px", boxShadow: "0 6px 22px -14px rgba(15,43,49,.32)" }}>
+    <div style={{ background: T.card, borderRadius: 14, padding: "15px 18px", boxShadow: T.shadow }}>
       <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".08em", textTransform: "uppercase", color: T.accent, marginBottom: 9 }}>
         Patient handouts
       </div>
@@ -315,13 +297,11 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
         width: "100vw",
         marginLeft: "calc(50% - 50vw)",
         minHeight: "100vh",
-        background: "#E4E8E7",
+        background: "radial-gradient(120% 90% at 50% -10%, #F7F6F2 0%, #EDECE6 70%)",
         padding: "28px 30px 80px",
         fontFamily: T.sans,
       }}
     >
-      <link rel="stylesheet" href={FONTS_HREF} />
-
       <div style={{ maxWidth: 1240, margin: "0 auto" }}>
         {/* topbar */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, flexWrap: "wrap" }}>
@@ -329,7 +309,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             <span style={{ width: 17, height: 17, borderRadius: "50%", background: `conic-gradient(${T.accent} 0 50%,${T.ink} 0 100%)`, display: "inline-block" }} />
             Pabaid
           </a>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 13px", background: T.card, borderRadius: 22, fontSize: 13, color: T.body, boxShadow: "0 2px 8px -5px rgba(15,43,49,.35)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 13px", background: T.card, borderRadius: 22, fontSize: 13, color: T.body, boxShadow: "0 2px 8px -5px rgba(50,42,26,.35)" }}>
             <b style={{ color: T.ink }}>
               {patient.ageYears ?? "—"}
               {sexInitial(patient.sex)} patient
@@ -353,10 +333,33 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
         </div>
 
         {/* body — 3 columns: chart rail · note · Q&A */}
-        <div style={{ display: "grid", gridTemplateColumns: "220px 1.4fr 1fr", gap: 16, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "236px minmax(0,1.4fr) minmax(0,1fr)", gap: 16, alignItems: "start" }}>
           {/* chart rail (real data) */}
           <aside style={{ background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 16, padding: "16px 15px", display: "flex", flexDirection: "column", gap: 15 }}>
             <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent }}>Chart</div>
+
+            {/* ONE "needs your eyes" strip at the top of the rail — every item
+                that wants clinician attention, gathered instead of scattered.
+                Rendered only when something actually needs attention. */}
+            {allergyFindings.length + allergySuggestions.length > 0 && (
+              <div style={{ background: T.amberBg, border: `1px solid ${T.amberLine}`, borderRadius: 12, padding: "10px 12px" }}>
+                <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.amberInk, marginBottom: 6 }}>
+                  Needs your eyes · {allergyFindings.length + allergySuggestions.length}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {allergyFindings.map((f, i) => (
+                    <div key={`f${i}`} style={{ fontSize: 11.5, lineHeight: 1.5, color: T.amberInk }}>
+                      ⚠ <b>{f.medication}</b> conflicts with recorded <b>{f.allergen}</b> allergy ({f.allergySource})
+                    </div>
+                  ))}
+                  {allergySuggestions.map((s, i) => (
+                    <div key={`s${i}`} style={{ fontSize: 11.5, lineHeight: 1.5, color: T.amberInk }}>
+                      📄 Document mentions a possible <b>{s.substance}</b> allergy — review below
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <RailSection title="Problems" items={encounter.problems.map((p: Problem) => [p.label, p.code].filter(Boolean).join(" · "))} empty="None listed" />
             <MedicationsRail medications={encounter.medications} warnings={boxedWarnings} />
             <RailSection
@@ -380,34 +383,38 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                 records with the source sentence; the clinician confirms. */}
             <AllergySuggestions encounterId={encounter.id} suggestions={allergySuggestions} />
 
-            {/* Since last visit: medication reconciliation. */}
+            {/* Since last visit: medication reconciliation — collapsed by
+                default (native <details>, zero JS), count in the summary. */}
             {reconciliation &&
               (reconciliation.started.length > 0 || reconciliation.stopped.length > 0 || reconciliation.changed.length > 0) && (
-                <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-                  <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
+                <details style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
+                  <summary style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, cursor: "pointer", display: "flex", alignItems: "center" }}>
                     Since last visit
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, lineHeight: 1.45, color: T.body }}>
+                    <span style={{ font: `600 9px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 8, padding: "2px 6px", marginLeft: "auto" }}>
+                      {reconciliation.started.length + reconciliation.stopped.length + reconciliation.changed.length}
+                    </span>
+                  </summary>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, lineHeight: 1.45, color: T.body, paddingTop: 8 }}>
                     {reconciliation.started.map((m, i) => (
                       <div key={`s${i}`}>
-                        <span style={{ font: `700 9px/1 ${T.mono}`, color: "#166534", background: "#dcfce7", borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STARTED</span>
+                        <span style={{ font: `700 9px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STARTED</span>
                         {[m.name, m.dose].filter(Boolean).join(" ")}
                       </div>
                     ))}
                     {reconciliation.stopped.map((m, i) => (
                       <div key={`x${i}`}>
-                        <span style={{ font: `700 9px/1 ${T.mono}`, color: "#8f2e24", background: "#fbedea", borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STOPPED</span>
+                        <span style={{ font: `700 9px/1 ${T.mono}`, color: T.redInk, background: T.redBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>STOPPED</span>
                         {[m.name, m.dose].filter(Boolean).join(" ")}
                       </div>
                     ))}
                     {reconciliation.changed.map((c, i) => (
                       <div key={`c${i}`}>
-                        <span style={{ font: `700 9px/1 ${T.mono}`, color: "#92400e", background: "#fef3c7", borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>CHANGED</span>
+                        <span style={{ font: `700 9px/1 ${T.mono}`, color: T.amberInk, background: T.amberBg, borderRadius: 3, padding: "2px 5px", marginRight: 6 }}>CHANGED</span>
                         {c.name}: {c.from} → {c.to}
                       </div>
                     ))}
                   </div>
-                </div>
+                </details>
               )}
 
             {/* Vitals trends across visits (numeric series with ≥2 points). */}
@@ -449,11 +456,14 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
             {/* Patient continuity: prior visits (matched by external ref) and
                 uploaded history documents. */}
             {history.length > 0 && (
-              <div style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
-                <div style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
+              <details style={{ marginTop: 4, paddingTop: 13, borderTop: `1px dashed ${T.line}` }}>
+                <summary style={{ font: `700 9.5px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, cursor: "pointer", display: "flex", alignItems: "center" }}>
                   Previous visits
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  <span style={{ font: `600 9px/1 ${T.mono}`, color: T.accentInk, background: T.accentBg, borderRadius: 8, padding: "2px 6px", marginLeft: "auto" }}>
+                    {history.length}
+                  </span>
+                </summary>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, paddingTop: 8 }}>
                   {history.map((h) => (
                     <a
                       key={h.encounter.id}
@@ -467,7 +477,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
                     </a>
                   ))}
                 </div>
-              </div>
+              </details>
             )}
 
             <HistoryDocs encounterId={encounter.id} initialDocuments={historyDocs} />
@@ -503,9 +513,11 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
 
           {/* Auto-surfaced cheat-sheets (curated library, problem-matched) + the
               Q&A engine, contextual to this patient */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {cheatSheets.map((sheet) => (
-              <CheatSheetCard key={sheet.id} sheet={sheet} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Ranked: the top insight opens by default; the rest sit as
+                one-line headers until asked (fixes card overload). */}
+            {cheatSheets.map((sheet, i) => (
+              <CheatSheetCard key={sheet.id} sheet={sheet} defaultOpen={i === 0} />
             ))}
             {regionalPatterns.map((pattern) => (
               <RegionalPatternCard key={pattern.id} pattern={pattern} />

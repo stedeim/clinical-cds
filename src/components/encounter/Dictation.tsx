@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { inferSpeaker, type InferredSpeaker } from "@/lib/note/speaker-infer";
+import { T } from "@/lib/ui/tokens";
 
 // In-encounter dictation via the browser's Web Speech API.
 //
@@ -18,23 +19,6 @@ import { inferSpeaker, type InferredSpeaker } from "@/lib/note/speaker-infer";
 //     phrase lands as a "DR: …" / "PT: …" line feeding the existing
 //     transcript-grounding pipeline. No new backend — speech never leaves the
 //     page except through the browser's own engine.
-
-const T = {
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentLine: "#c9e2e6",
-  rec: "#c1502a",
-  recBg: "#fdeee7",
-  amberInk: "#92400e",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 export function Dictation({ onSegment }: { onSegment: (line: string) => void }) {
   const [supported, setSupported] = useState<boolean | null>(null);

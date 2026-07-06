@@ -17,13 +17,13 @@ import { parseMedicationEntry } from "@/lib/case-intake";
 
 function Chip({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 py-1 pl-3 pr-1.5 text-sm text-slate-700">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1F0EB] py-1 pl-3 pr-1.5 text-sm text-body">
       {children}
       <button
         type="button"
         onClick={onRemove}
         aria-label="Remove"
-        className="flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+        className="flex h-5 w-5 items-center justify-center rounded-full text-[#bcb7a9] hover:bg-[#EEEDE6] hover:text-[#5c574a]"
       >
         ×
       </button>
@@ -94,15 +94,15 @@ export function MedicationsField({
             <Chip key={i} onRemove={() => onChange(medications.filter((_, j) => j !== i))}>
               {m.name}
               {m.dose && <span className="font-mono text-xs text-clinical">{m.dose}</span>}
-              {m.frequency && <span className="text-xs text-slate-500">{m.frequency}</span>}
+              {m.frequency && <span className="text-xs text-[#8b8779]">{m.frequency}</span>}
             </Chip>
           ))}
         </div>
       )}
 
       {pendingDrug ? (
-        <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 p-2.5">
-          <p className="text-xs font-medium text-slate-600">
+        <div className="mt-1 rounded-md border border-[#E6E4DB] bg-[#FBFAF6] p-2.5">
+          <p className="text-xs font-medium text-[#8b8779]">
             {pendingDrug.name} — pick a strength (or skip):
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -111,7 +111,7 @@ export function MedicationsField({
                 key={s}
                 type="button"
                 onClick={() => addMedication({ name: pendingDrug.name, dose: strengthToDose(s) })}
-                className="rounded border border-slate-300 bg-white px-2 py-1 font-mono text-xs text-slate-700 hover:border-clinical hover:text-clinical"
+                className="rounded border border-[#E6E4DB] bg-white px-2 py-1 font-mono text-xs text-body hover:border-clinical hover:text-clinical"
               >
                 {s.trim()}
               </button>
@@ -119,7 +119,7 @@ export function MedicationsField({
             <button
               type="button"
               onClick={() => addMedication({ name: pendingDrug.name })}
-              className="rounded px-2 py-1 text-xs text-slate-500 underline"
+              className="rounded px-2 py-1 text-xs text-[#8b8779] underline"
             >
               skip
             </button>

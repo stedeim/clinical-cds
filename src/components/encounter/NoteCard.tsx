@@ -15,6 +15,7 @@ import { sectionLabel, CodeChip, SpanText, SectionHeaderRow, SectionEditor } fro
 import { SummaryCard } from "@/components/encounter/SummaryCard";
 import { DoseChip, DoseBanner } from "@/components/encounter/DoseReview";
 import type { TranscriptSummaryT } from "@/lib/summary/schema";
+import { T } from "@/lib/ui/tokens";
 
 // The Visit Note card — a client island so it can re-ground the note against a
 // pasted transcript without a full page reload.
@@ -27,27 +28,7 @@ import type { TranscriptSummaryT } from "@/lib/summary/schema";
 // /api/note, which parses it into segments, re-runs generateNote, and returns a
 // note whose spoken spans are grounded in those segments.
 
-const T = {
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  panelBg: "#F6F8F7",
-  card: "#ffffff",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentBg2: "#eef6f7",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  amberLine: "#fcd34d",
-  serif: "'Newsreader',ui-serif,Georgia,serif",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
-const cardShadow = "0 6px 22px -14px rgba(15,43,49,.32)";
+const cardShadow = T.shadow;
 
 export function NoteCard({
   encounterId,
@@ -509,14 +490,19 @@ export function NoteCard({
         </div>
       )}
 
-      {/* Finishing flow — sign / copy / download / print. Signing attests the
-          note and LOCKS it: edit affordances disappear and changes become
-          addenda. Unsigning is only offered while no addendum exists. */}
+      {/* Finishing flow — ONE hero action (Sign, dark ink per the v2 design),
+          quiet secondaries beside it. Signing attests the note and LOCKS it:
+          edit affordances disappear and changes become addenda. Unsigning is
+          only offered while no addendum exists. */}
       <div style={{ marginTop: 20, paddingTop: 14, borderTop: `1px solid ${T.line}`, display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
         {!(signedAt && addenda.length > 0) && (
           <button
             onClick={toggleSign}
-            style={{ font: `600 12px/1 ${T.sans}`, color: signedAt ? T.accentInk : "#fff", background: signedAt ? T.accentBg : T.accent, border: signedAt ? `1px solid ${T.accentLine}` : "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}
+            style={
+              signedAt
+                ? { font: `600 12px/1 ${T.sans}`, color: T.accentInk, background: T.accentBg, border: `1px solid ${T.accentLine}`, borderRadius: 10, padding: "10px 16px", cursor: "pointer" }
+                : { font: `700 13.5px/1 ${T.sans}`, color: "#fff", background: T.ink, border: "none", borderRadius: 10, padding: "12px 22px", cursor: "pointer", boxShadow: "0 6px 16px -8px rgba(33,31,25,.55)" }
+            }
           >
             {signedAt ? "Signed ✓ — unsign" : "Sign note"}
           </button>
@@ -531,19 +517,19 @@ export function NoteCard({
         )}
         <button
           onClick={copyNote}
-          style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+          style={{ font: `500 11.5px/1 ${T.sans}`, color: copied ? T.accentInk : T.muted, background: "none", border: "none", borderRadius: 7, padding: "8px 9px", cursor: "pointer" }}
         >
           {copied ? "Copied ✓" : "Copy"}
         </button>
         <button
           onClick={downloadNote}
-          style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+          style={{ font: `500 11.5px/1 ${T.sans}`, color: T.muted, background: "none", border: "none", borderRadius: 7, padding: "8px 9px", cursor: "pointer" }}
         >
-          Download .txt
+          .txt
         </button>
         <button
           onClick={printNote}
-          style={{ font: `600 12px/1 ${T.sans}`, color: T.accent, background: "#fff", border: `1px solid ${T.accentLine}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}
+          style={{ font: `500 11.5px/1 ${T.sans}`, color: T.muted, background: "none", border: "none", borderRadius: 7, padding: "8px 9px", cursor: "pointer" }}
         >
           Print / PDF
         </button>

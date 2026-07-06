@@ -97,10 +97,10 @@ export function AutocompleteInput({
           }
         }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-clinical focus:outline-none"
+        className="mt-1 w-full rounded-md border border-[#E6E4DB] px-3 py-2 text-sm focus:border-clinical focus:outline-none"
       />
       {open && (
-        <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+        <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-[#E6E4DB] bg-white py-1 shadow-lg">
           {options.map((o, i) => (
             <li key={o.id}>
               <button
@@ -111,11 +111,11 @@ export function AutocompleteInput({
                 }}
                 onMouseEnter={() => setHighlight(i)}
                 className={`flex w-full items-baseline gap-2 px-3 py-1.5 text-left text-sm ${
-                  i === highlight ? "bg-slate-100" : ""
+                  i === highlight ? "bg-[#F1F0EB]" : ""
                 }`}
               >
                 <span className="text-ink">{o.primary}</span>
-                {o.secondary && <span className="font-mono text-xs text-slate-400">{o.secondary}</span>}
+                {o.secondary && <span className="font-mono text-xs text-[#bcb7a9]">{o.secondary}</span>}
               </button>
             </li>
           ))}

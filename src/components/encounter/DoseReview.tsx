@@ -3,27 +3,12 @@
 import { useState } from "react";
 import type { DoseFinding } from "@/lib/dosecheck/schema";
 import { isFlagging, type DoseDecision } from "@/lib/dosecheck/decisions";
+import { T } from "@/lib/ui/tokens";
 
 // Dose-review UI: the inline chip on a plan line and the actionable caution
 // banner (Revise dose… / Keep as documented). Extracted from NoteCard.
 // The regulatory shape is unchanged: never a suggested dose — the clinician
 // types the revision and the same offline check re-runs against it.
-
-const T = {
-  ink: "#0f2b31",
-  faint: "#a9bbc0",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentBg2: "#eef6f7",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  amberLine: "#fcd34d",
-  body: "#33454a",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 export function DoseChip({ finding, decision }: { finding: DoseFinding; decision?: DoseDecision }) {
   // A decided flag must not keep shouting amber: once the clinician has

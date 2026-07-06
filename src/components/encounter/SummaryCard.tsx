@@ -2,28 +2,11 @@
 
 import type { TranscriptSummaryT, SummaryPointT } from "@/lib/summary/schema";
 import type { TranscriptSegment } from "@/lib/note/schema";
+import { T } from "@/lib/ui/tokens";
 
 // Renders the transcript summary — the "skip the fluff" view. Every point is
 // grounded: hovering shows the exact transcript line(s) it came from, so the
 // summary is verifiable at a glance, never a black box.
-
-const T = {
-  ink: "#0f2b31",
-  body: "#33454a",
-  muted: "#7c9096",
-  faint: "#a9bbc0",
-  line: "#E4E9E8",
-  accent: "#0e7490",
-  accentInk: "#0b5e73",
-  accentBg: "#e2f0f2",
-  accentBg2: "#eef6f7",
-  accentLine: "#c9e2e6",
-  amberInk: "#92400e",
-  amberBg: "#fef3c7",
-  serif: "'Newsreader',ui-serif,Georgia,serif",
-  sans: "'Plus Jakarta Sans',system-ui,sans-serif",
-  mono: "'IBM Plex Mono',ui-monospace,monospace",
-};
 
 function sourceTitle(point: SummaryPointT, segments: TranscriptSegment[]): string {
   const lines = point.segmentIds

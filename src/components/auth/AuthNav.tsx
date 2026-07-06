@@ -20,7 +20,7 @@ export function AuthNav() {
     window.location.href = "/auth/login";
   }
 
-  if (loading) return <span className="text-xs text-slate-400">Loading…</span>;
+  if (loading) return <span className="text-xs text-[#bcb7a9]">Loading…</span>;
 
   if (!user) {
     return (
@@ -32,7 +32,7 @@ export function AuthNav() {
 
   return (
     <div className="flex items-center gap-3 text-sm">
-      <span className="text-slate-600">{user.email}</span>
+      <span className="text-[#8b8779]">{user.email}</span>
       <button onClick={logout} className="font-medium text-clinical hover:underline">
         Sign out
       </button>

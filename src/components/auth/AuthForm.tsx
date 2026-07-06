@@ -68,7 +68,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <Field label="Credential" value={credential} onChange={setCredential} required />
           <div>
             <Field label="NPI (US clinicians — optional)" value={npi} onChange={setNpi} />
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#8b8779]">
               10-digit NPI enables instant verification against the public NPPES registry. Without one
               (or outside the US), your account is verified by manual review.
             </p>
@@ -113,7 +113,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-clinical focus:outline-none"
+        className="mt-1 w-full rounded-md border border-[#E6E4DB] px-3 py-2 text-sm focus:border-clinical focus:outline-none"
       />
     </div>
   );
