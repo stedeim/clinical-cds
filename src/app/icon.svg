@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Pabaid mark: the two-tone circle (green | ink), on warm paper for
+       legibility in tiny favicon sizes. -->
+  <rect width="32" height="32" rx="7" fill="#F1F0EB"/>
+  <path d="M16 4 A12 12 0 0 1 16 28 Z" fill="#4E6B57"/>
+  <path d="M16 4 A12 12 0 0 0 16 28 Z" fill="#211f19"/>
+</svg>
