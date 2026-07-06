@@ -292,13 +292,13 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
 
   return (
     <div
+      className="px-4 pb-20 pt-5 sm:px-[30px] sm:pt-7"
       style={{
-        // Full-bleed: escape the app's max-w-5xl <main> for the 3-column layout.
+        // Full-bleed: escape the app's constrained <main> for the 3-column layout.
         width: "100vw",
         marginLeft: "calc(50% - 50vw)",
         minHeight: "100vh",
         background: "radial-gradient(120% 90% at 50% -10%, #F7F6F2 0%, #EDECE6 70%)",
-        padding: "28px 30px 80px",
         fontFamily: T.sans,
       }}
     >
@@ -333,7 +333,10 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
         </div>
 
         {/* body — 3 columns: chart rail · note · Q&A */}
-        <div style={{ display: "grid", gridTemplateColumns: "236px minmax(0,1.4fr) minmax(0,1fr)", gap: 16, alignItems: "start" }}>
+        {/* Responsive collapse (mockup rules): 3 columns on wide screens,
+            rail + note with insights full-width below at laptop width,
+            a single column on phones. */}
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[236px_minmax(0,1fr)] xl:grid-cols-[236px_minmax(0,1.4fr)_minmax(0,1fr)]">
           {/* chart rail (real data) */}
           <aside style={{ background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 16, padding: "16px 15px", display: "flex", flexDirection: "column", gap: 15 }}>
             <div style={{ font: `700 10px/1 ${T.sans}`, letterSpacing: ".1em", textTransform: "uppercase", color: T.accent }}>Chart</div>
@@ -513,7 +516,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
 
           {/* Auto-surfaced cheat-sheets (curated library, problem-matched) + the
               Q&A engine, contextual to this patient */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3 md:col-span-2 xl:col-span-1">
             {/* Ranked: the top insight opens by default; the rest sit as
                 one-line headers until asked (fixes card overload). */}
             {cheatSheets.map((sheet, i) => (
