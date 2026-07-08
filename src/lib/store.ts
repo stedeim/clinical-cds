@@ -30,7 +30,7 @@ export async function listCases(clinicianId?: string): Promise<CaseRecord[]> {
     }
     const client = getServiceClientIfConfigured();
     if (!client) throw new MissingSupabaseConfigError("Supabase service client unavailable.");
-    return dbCases.listCasesFromDb(client);
+    return dbCases.listCasesFromDb(client, clinicianId);
   }
   return memoryStore.listCases();
 }
@@ -48,7 +48,7 @@ export async function getCase(
     }
     const client = getServiceClientIfConfigured();
     if (!client) throw new MissingSupabaseConfigError("Supabase service client unavailable.");
-    return dbCases.getCaseFromDb(client, encounterId);
+    return dbCases.getCaseFromDb(client, encounterId, clinicianId);
   }
   return memoryStore.getCase(encounterId);
 }

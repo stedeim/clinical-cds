@@ -10,7 +10,9 @@ import type { Problem } from "@/lib/types";
 // Case list — entry point. Server Component: reads the data layer on the server.
 export default async function HomePage() {
   const user = await getServerUser();
-  const cases = await listCases(user?.id);
+  // Signed-out visitors get the sample-case start block, never a crash:
+  // listCases requires a clinician id once Supabase is configured.
+  const cases = user ? await listCases(user.id) : [];
   const clinician = user ? await getCurrentClinician(user.id) : null;
 
   // "Good morning, Dr. Chen" — the v2 design's greeting. Server-local time is
@@ -106,10 +108,12 @@ export default async function HomePage() {
             <span className="shrink-0 text-[14px] font-semibold text-clinical">Explore →</span>
           </a>
           <a
-            href="/cases/new"
+            href={user ? "/cases/new" : "/auth/login"}
             className="block rounded-[14px] border-2 border-dashed border-[#CFDCD2] px-4 py-[18px] text-center text-[14px] font-semibold text-[#3c5646]"
           >
-            + Create your first case — three quick steps
+            {user
+              ? "+ Create your first case — three quick steps"
+              : "Sign in to create your first case"}
           </a>
         </div>
       ) : (

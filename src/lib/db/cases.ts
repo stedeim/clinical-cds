@@ -12,8 +12,17 @@ import type { CaseRecord, Allergy, Encounter, Lab, Medication, Patient, Problem,
 
 // Highest-level Supabase-backed store functions. These map rows from the SQL
 // schema into the CaseRecord type used by the rest of the app.
+//
+// OWNERSHIP IS ENFORCED HERE, EXPLICITLY. These functions run on the service
+// role client, which BYPASSES Row-Level Security — the RLS policies protect
+// direct PostgREST access, not this path. Every query below must therefore
+// filter by clinician_id itself; forgetting that filter exposed one
+// clinician's case to another in the 2026-07-07 MVP verification.
 
-export async function listCasesFromDb(supabase: SupabaseClient): Promise<CaseRecord[]> {
+export async function listCasesFromDb(
+  supabase: SupabaseClient,
+  clinicianId: string,
+): Promise<CaseRecord[]> {
   const { data: encounters, error } = await supabase
     .from("encounters")
     .select(
@@ -37,6 +46,7 @@ export async function listCasesFromDb(supabase: SupabaseClient): Promise<CaseRec
       )
     `,
     )
+    .eq("clinician_id", clinicianId)
     .order("occurred_at", { ascending: false });
 
   if (error) throw mapDbError(error);
@@ -72,6 +82,7 @@ export async function listCasesFromDb(supabase: SupabaseClient): Promise<CaseRec
 export async function getCaseFromDb(
   supabase: SupabaseClient,
   encounterId: string,
+  clinicianId: string,
 ): Promise<CaseRecord | undefined> {
   const { data: encounter, error } = await supabase
     .from("encounters")
@@ -97,6 +108,7 @@ export async function getCaseFromDb(
     `,
     )
     .eq("id", encounterId)
+    .eq("clinician_id", clinicianId)
     .single();
 
   if (error) {
@@ -235,6 +247,7 @@ export async function saveCaseToDb(
   const savedPatient: Patient = {
     id: patientRow.id,
     externalRef: patientRow.external_ref ?? undefined,
+    displayName: patientRow.display_name ?? undefined,
     ageYears: patientRow.age_years ?? undefined,
     sex: (patientRow.sex as Sex | null) ?? "unknown",
     isTestCase: patientRow.is_test_case,
