@@ -80,9 +80,36 @@ export function CaseIntakeForm() {
       onSubmit={submit}
       className="overflow-hidden rounded-2xl bg-white shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)]"
     >
-      {/* Step 1 — who */}
+      {/* Step 1 — why. The complaint comes first: it is the one required
+          field, the easiest to answer, and answering it creates momentum
+          (goal gradient) before the identity housekeeping. */}
       <div className="border-b border-[#FBFAF6] px-[22px] py-[18px]">
-        <StepHead n={1} title="Who is this?" aside="name optional — no DOB, ever" />
+        <StepHead n={1} title="Why are they here?" done={!!form.chiefComplaint.trim()} />
+        <div className="space-y-[13px]">
+          <Field
+            label="Chief complaint"
+            required
+            value={form.chiefComplaint}
+            onChange={(v) => update("chiefComplaint", v)}
+          />
+          <Area
+            label="History"
+            labelAside="· optional"
+            value={form.hpi}
+            onChange={(v) => update("hpi", v)}
+            rows={2}
+          />
+        </div>
+      </div>
+
+      {/* Step 2 — who */}
+      <div className="border-b border-[#FBFAF6] px-[22px] py-[18px]">
+        <StepHead
+          n={2}
+          title="Who is this?"
+          aside="name optional — no DOB, ever"
+          done={!!(form.patientName.trim() || form.externalRef.trim() || form.ageYears)}
+        />
         <div className="mb-[13px]">
           <Field
             label="Patient name"
@@ -121,29 +148,14 @@ export function CaseIntakeForm() {
         </div>
       </div>
 
-      {/* Step 2 — why */}
-      <div className="border-b border-[#FBFAF6] px-[22px] py-[18px]">
-        <StepHead n={2} title="Why are they here?" />
-        <div className="space-y-[13px]">
-          <Field
-            label="Chief complaint"
-            required
-            value={form.chiefComplaint}
-            onChange={(v) => update("chiefComplaint", v)}
-          />
-          <Area
-            label="History"
-            labelAside="· optional"
-            value={form.hpi}
-            onChange={(v) => update("hpi", v)}
-            rows={2}
-          />
-        </div>
-      </div>
-
       {/* Step 3 — the chart */}
       <div className="px-[22px] py-[18px]">
-        <StepHead n={3} title="The chart" aside="coded entries power the safety checks" />
+        <StepHead
+          n={3}
+          title="The chart"
+          aside="coded entries power the safety checks"
+          done={problems.length > 0 || medications.length > 0 || !!form.allergies.trim()}
+        />
         <div className="space-y-[13px]">
           <div className="grid gap-3 sm:grid-cols-2">
             <ProblemsField problems={problems} onChange={setProblems} />
@@ -196,11 +208,18 @@ export function CaseIntakeForm() {
   );
 }
 
-function StepHead({ n, title, aside }: { n: number; title: string; aside?: string }) {
+// Step chip fills in (✓ on green) the moment the step has content — visible
+// momentum through the form instead of three static numbers.
+function StepHead({ n, title, aside, done }: { n: number; title: string; aside?: string; done?: boolean }) {
   return (
     <div className="mb-3 flex items-baseline gap-[9px]">
-      <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#EEF2EE] font-mono text-[12px] font-semibold text-[#3c5646]">
-        {n}
+      <span
+        className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-full font-mono text-[12px] font-semibold transition-colors ${
+          done ? "bg-clinical text-white" : "bg-[#EEF2EE] text-[#3c5646]"
+        }`}
+        aria-label={done ? `Step ${n} complete` : `Step ${n}`}
+      >
+        {done ? "✓" : n}
       </span>
       <h2 className="font-serif text-base font-semibold text-ink">{title}</h2>
       {aside && <span className="text-[12px] text-[#948d7c]">{aside}</span>}

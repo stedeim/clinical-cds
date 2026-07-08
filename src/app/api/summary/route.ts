@@ -6,6 +6,7 @@ import { summarizeTranscript, SummaryContractError } from "@/lib/summary/engine"
 import { recordAudit } from "@/lib/audit";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 
 // Transcript-summary endpoint — the "cut the fluff" button. Same PHI posture
 // as /api/note: the browser sends the encounter id + transcript text, the
@@ -36,16 +37,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  let clinicianId: string;
-  try {
-    const userId = await currentUserIdFromCookies();
-    clinicianId = (await requireVerifiedClinician(userId)).id;
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
+  // Sample encounter (synthetic, fixed id): open pre-signup. Real cases keep
+  // the clinician gate.
+  const isSample = body.encounterId === SAMPLE_ENCOUNTER_ID;
+  let clinicianId = "sample-visitor";
+  if (!isSample) {
+    try {
+      const userId = await currentUserIdFromCookies();
+      clinicianId = (await requireVerifiedClinician(userId)).id;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        return NextResponse.json({ error: err.message }, { status: err.status });
+      }
+      console.error("[summary] auth error", err);
+      return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
     }
-    console.error("[summary] auth error", err);
-    return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
   }
 
   const record = await getCase(body.encounterId, clinicianId);
@@ -60,6 +66,7 @@ export async function POST(req: Request) {
 
   try {
     const summary = await summarizeTranscript(segments);
+    if (isSample) return NextResponse.json({ summary, transcript: segments });
     await recordAudit({
       clinicianId,
       action: "summary_generate",

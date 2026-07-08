@@ -5,6 +5,7 @@ import { runCdsQuery, CdsContractError } from "@/lib/cds/engine";
 import { recordAudit } from "@/lib/audit";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 import { FRAMEWORK_IDS } from "@/lib/guidelines";
 import type { GuidelineFramework } from "@/lib/types";
 
@@ -42,17 +43,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  let clinicianId: string;
-  try {
-    const userId = await currentUserIdFromCookies();
-    const clinician = await requireVerifiedClinician(userId);
-    clinicianId = clinician.id;
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
+  // The public sample encounter (synthetic data, fixed id) skips the clinician
+  // gate so visitors can see the engine work before signing up. Real cases —
+  // anything with PHI — keep the full verified-clinician requirement.
+  const isSample = body.encounterId === SAMPLE_ENCOUNTER_ID;
+  let clinicianId = "sample-visitor";
+  if (!isSample) {
+    try {
+      const userId = await currentUserIdFromCookies();
+      const clinician = await requireVerifiedClinician(userId);
+      clinicianId = clinician.id;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        return NextResponse.json({ error: err.message }, { status: err.status });
+      }
+      console.error("[cds_query] auth error", err);
+      return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
     }
-    console.error("[cds_query] auth error", err);
-    return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
   }
 
   const record = await getCase(body.encounterId, clinicianId);
@@ -67,12 +74,16 @@ export async function POST(req: Request) {
       frameworkPref: body.framework as GuidelineFramework | undefined,
     });
 
-    await recordAudit({
-      clinicianId,
-      action: "cds_query",
-      encounterId: body.encounterId,
-      detail: { model, framework: body.framework ?? "US", questionLength: body.question.length },
-    });
+    // No audit row for sample-mode visitors: audit_logs keys on a real
+    // clinician id, and there is no PHI in the synthetic case to account for.
+    if (!isSample) {
+      await recordAudit({
+        clinicianId,
+        action: "cds_query",
+        encounterId: body.encounterId,
+        detail: { model, framework: body.framework ?? "US", questionLength: body.question.length },
+      });
+    }
 
     return NextResponse.json({ response, model });
   } catch (err) {

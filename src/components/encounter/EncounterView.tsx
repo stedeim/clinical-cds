@@ -228,7 +228,10 @@ function RailSection({ title, items, empty }: { title: string; items: string[]; 
   );
 }
 
-export async function EncounterView({ record }: { record: CaseRecord }) {
+// `sample` renders the public synthetic encounter: identical experience minus
+// the affordances that persist data for a signed-in clinician (follow-ups,
+// history-document upload).
+export async function EncounterView({ record, sample }: { record: CaseRecord; sample?: boolean }) {
   const { patient, encounter } = record;
 
   // Real services: a provenance-tagged note and a cited dose check. The note is
@@ -496,7 +499,7 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
               </details>
             )}
 
-            <HistoryDocs encounterId={encounter.id} initialDocuments={historyDocs} />
+            {!sample && <HistoryDocs encounterId={encounter.id} initialDocuments={historyDocs} />}
 
             {/* True ambient capture (passive, diarized) isn't built. Push-button
                 dictation IS: the note's "+ Add transcript" panel has a mic that
@@ -520,11 +523,13 @@ export async function EncounterView({ record }: { record: CaseRecord }) {
               clinicianName={clinician?.fullName}
               clinicianCredential={clinician?.credential}
             />
-            <FollowUpCard
-              encounterId={encounter.id}
-              initialFollowUps={followUps}
-              suggestions={followUpSuggestions}
-            />
+            {!sample && (
+              <FollowUpCard
+                encounterId={encounter.id}
+                initialFollowUps={followUps}
+                suggestions={followUpSuggestions}
+              />
+            )}
           </div>
 
           {/* Auto-surfaced cheat-sheets (curated library, problem-matched) + the

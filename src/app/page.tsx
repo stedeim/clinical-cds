@@ -67,22 +67,67 @@ export default async function HomePage() {
         )}
       </div>
 
+      {/* Verification pending is a waiting room, not a dead end: say so, and
+          give the doctor something real to do meanwhile. */}
+      {clinician && !clinician.isVerified && (
+        <div className="rounded-xl border border-[#D9B85E] bg-[#F6EACB] px-4 py-3 text-[13.5px] leading-snug text-caution">
+          <b className="font-semibold">Verification pending.</b> CDS output unlocks when your
+          clinician verification completes.{" "}
+          <a href="/sample" className="font-semibold underline">
+            Explore the sample encounter meanwhile →
+          </a>
+        </div>
+      )}
+
       <FollowUpDashboard items={followUpItems} />
 
-      <CaseList
-        cases={cases.map(
-          (c): CaseRow => ({
-            encounterId: c.encounter.id,
-            patientName: c.patient.displayName,
-            patientLabel: `${c.patient.ageYears ?? "—"}${c.patient.sex === "female" ? "F" : c.patient.sex === "male" ? "M" : ""}`,
-            chiefComplaint: c.encounter.chiefComplaint ?? "",
-            problems: c.encounter.problems.map((p: Problem) => p.label).join(", "),
-            externalRef: c.patient.externalRef,
-            isTestCase: c.patient.isTestCase ?? false,
-            updatedAt: c.updatedAt,
-          }),
-        )}
-      />
+      {cases.length === 0 ? (
+        /* Never an empty start: the sample case gives a new account something
+           to open on day one, and the first-case prompt names the next step. */
+        <div className="space-y-2">
+          <a
+            href="/sample"
+            className="flex items-center gap-4 rounded-[14px] bg-white px-4 py-[14px] shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)] transition-transform hover:-translate-y-px"
+          >
+            <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#EEF2EE] text-xs font-semibold text-[#3c5646]">
+              MC
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15.5px] font-semibold leading-snug text-ink">
+                Margaret Chen
+                <span className="ml-2 rounded bg-[#EEF2EE] px-1.5 py-0.5 text-[11px] font-semibold text-[#3c5646]">
+                  sample
+                </span>
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-[#6b665a]">
+                See the dose flag, allergy conflict, and grounded note working — nothing saved
+              </span>
+            </span>
+            <span className="shrink-0 text-[14px] font-semibold text-clinical">Explore →</span>
+          </a>
+          <a
+            href="/cases/new"
+            className="block rounded-[14px] border-2 border-dashed border-[#CFDCD2] px-4 py-[18px] text-center text-[14px] font-semibold text-[#3c5646]"
+          >
+            + Create your first case — three quick steps
+          </a>
+        </div>
+      ) : (
+        <CaseList
+          cases={cases.map(
+            (c): CaseRow => ({
+              encounterId: c.encounter.id,
+              patientName: c.patient.displayName,
+              patientLabel: `${c.patient.ageYears ?? "—"}${c.patient.sex === "female" ? "F" : c.patient.sex === "male" ? "M" : ""}`,
+              chiefComplaint: c.encounter.chiefComplaint ?? "",
+              problems: c.encounter.problems.map((p: Problem) => p.label).join(", "),
+              externalRef: c.patient.externalRef,
+              isTestCase: c.patient.isTestCase ?? false,
+              updatedAt: c.updatedAt,
+            }),
+          )}
+        />
+      )}
 
       <p className="text-xs text-[#948d7c]">
         Stub mode: one seeded demo case. With Supabase configured, this lists the

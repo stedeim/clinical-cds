@@ -6,6 +6,7 @@ import { parseTranscript } from "@/lib/note/transcript";
 import { recordAudit } from "@/lib/audit";
 import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 
 // Note-generation endpoint. Same PHI posture as /api/query: the browser sends an
 // encounter id (+ an optional pasted transcript), never the case payload. This
@@ -44,17 +45,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  let clinicianId: string;
-  try {
-    const userId = await currentUserIdFromCookies();
-    const clinician = await requireVerifiedClinician(userId);
-    clinicianId = clinician.id;
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
+  // Sample encounter (synthetic, fixed id): open so visitors can try
+  // transcript grounding pre-signup. Real cases keep the clinician gate.
+  const isSample = body.encounterId === SAMPLE_ENCOUNTER_ID;
+  let clinicianId = "sample-visitor";
+  if (!isSample) {
+    try {
+      const userId = await currentUserIdFromCookies();
+      const clinician = await requireVerifiedClinician(userId);
+      clinicianId = clinician.id;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        return NextResponse.json({ error: err.message }, { status: err.status });
+      }
+      console.error("[note] auth error", err);
+      return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
     }
-    console.error("[note] auth error", err);
-    return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
   }
 
   const record = await getCase(body.encounterId, clinicianId);
@@ -70,12 +76,14 @@ export async function POST(req: Request) {
       transcript: transcript.length ? transcript : undefined,
     });
 
-    await recordAudit({
-      clinicianId,
-      action: "note_generate",
-      encounterId: body.encounterId,
-      detail: { model: note.model, transcriptSegments: transcript.length },
-    });
+    if (!isSample) {
+      await recordAudit({
+        clinicianId,
+        action: "note_generate",
+        encounterId: body.encounterId,
+        detail: { model: note.model, transcriptSegments: transcript.length },
+      });
+    }
 
     return NextResponse.json({ note, transcript });
   } catch (err) {

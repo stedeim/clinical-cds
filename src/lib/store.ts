@@ -6,6 +6,7 @@ import type { CaseContext, CaseRecord } from "./types";
 import * as memoryStore from "./memory-store";
 import * as dbCases from "./db/cases";
 import { createServiceClient, MissingSupabaseConfigError } from "./supabase/server";
+import { SAMPLE_ENCOUNTER_ID, sampleCase } from "./sample-case";
 
 function isSupabaseConfigured(): boolean {
   return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -38,6 +39,9 @@ export async function getCase(
   encounterId: string,
   clinicianId?: string,
 ): Promise<CaseRecord | undefined> {
+  // The public sample encounter resolves for everyone in every mode —
+  // synthetic data, read through the same path as real cases.
+  if (encounterId === SAMPLE_ENCOUNTER_ID) return sampleCase;
   if (isSupabaseConfigured()) {
     if (!clinicianId) {
       throw new Error("clinicianId is required when Supabase is configured.");
