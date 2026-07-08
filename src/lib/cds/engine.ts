@@ -34,19 +34,34 @@ export async function runCdsQuery(args: {
   // Provider chain: fails over across configured providers (and their key
   // pools) so a rate-limited key or a whole provider outage doesn't fail the
   // query. `model` reports which provider/model actually answered.
-  const { text, model } = await completeWithFailover({
-    system: SYSTEM_PROMPT,
-    user: userPrompt,
-    maxTokens: 2048,
-  });
+  //
+  // Contract retry: verbose models occasionally emit truncated or malformed
+  // JSON (the reason maxTokens is generous). One fresh attempt recovers most
+  // of those; a second failure surfaces as CdsContractError → an honest
+  // "please retry" to the clinician, never an out-of-contract render.
+  let lastContractError: CdsContractError | undefined;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { text, model } = await completeWithFailover({
+      system: SYSTEM_PROMPT,
+      user: userPrompt,
+      maxTokens: 4096,
+    });
 
-  const parsed = CdsResponse.safeParse(extractJson(text));
-  if (!parsed.success) {
-    // Fail safe: never render an out-of-contract response. Surface the failure.
-    throw new CdsContractError(parsed.error.message);
+    try {
+      const parsed = CdsResponse.safeParse(extractJson(text));
+      if (!parsed.success) {
+        throw new CdsContractError(parsed.error.message);
+      }
+      return { response: parsed.data, model };
+    } catch (err) {
+      if (err instanceof CdsContractError) {
+        lastContractError = err;
+        continue;
+      }
+      throw err;
+    }
   }
-
-  return { response: parsed.data, model };
+  throw lastContractError ?? new CdsContractError("model output unusable after retry");
 }
 
 export class CdsContractError extends Error {
@@ -66,5 +81,11 @@ function extractJson(text: string): unknown {
   if (start === -1 || end === -1) {
     throw new CdsContractError("no JSON object found in model output");
   }
-  return JSON.parse(candidate.slice(start, end + 1));
+  try {
+    return JSON.parse(candidate.slice(start, end + 1));
+  } catch (err) {
+    // Truncated/malformed JSON is a contract failure (retried above), not an
+    // internal error.
+    throw new CdsContractError(err instanceof Error ? err.message : "unparseable model output");
+  }
 }

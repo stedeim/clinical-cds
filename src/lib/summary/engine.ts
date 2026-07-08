@@ -28,13 +28,29 @@ export async function summarizeTranscript(
 
 async function modelSummary(segments: TranscriptSegment[]): Promise<TranscriptSummaryT> {
   // Provider chain: fail over across providers/keys before the mock fallback.
-  const { text, model } = await completeWithFailover({
-    system: SYSTEM_PROMPT,
-    user: buildUserPrompt(segments) + "\n\n" + RESPONSE_FORMAT_HINT,
-    maxTokens: 1500,
-  });
-
-  const raw = extractJson(text) as Record<string, unknown>;
+  // Contract retry mirrors cds/engine.ts: one fresh attempt on truncated or
+  // malformed JSON before surfacing the failure.
+  let raw: Record<string, unknown> | undefined;
+  let model = "";
+  let lastContractError: SummaryContractError | undefined;
+  for (let attempt = 0; attempt < 2 && !raw; attempt++) {
+    const result = await completeWithFailover({
+      system: SYSTEM_PROMPT,
+      user: buildUserPrompt(segments) + "\n\n" + RESPONSE_FORMAT_HINT,
+      maxTokens: 2048,
+    });
+    model = result.model;
+    try {
+      raw = extractJson(result.text) as Record<string, unknown>;
+    } catch (err) {
+      if (err instanceof SummaryContractError) {
+        lastContractError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (!raw) throw lastContractError ?? new SummaryContractError("model output unusable after retry");
   // The server stamps model/generatedAt so they can't be spoofed. Also drop any
   // cited segment id that doesn't exist in the input — a fabricated citation is
   // worse than no point at all.
@@ -73,7 +89,11 @@ function extractJson(text: string): unknown {
   if (start === -1 || end === -1) {
     throw new SummaryContractError("no JSON object found in model output");
   }
-  return JSON.parse(candidate.slice(start, end + 1));
+  try {
+    return JSON.parse(candidate.slice(start, end + 1));
+  } catch (err) {
+    throw new SummaryContractError(err instanceof Error ? err.message : "unparseable model output");
+  }
 }
 
 // ---------------------------------------------------------------------------

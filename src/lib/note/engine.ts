@@ -61,15 +61,32 @@ async function modelNote(args: {
     RESPONSE_FORMAT_HINT;
 
   // Provider chain: fail over across providers/keys before the mock fallback.
-  const { text, model } = await completeWithFailover({
-    system: SYSTEM_PROMPT,
-    user: userPrompt,
-    maxTokens: 2048,
-  });
+  // Contract retry mirrors cds/engine.ts: verbose models occasionally emit
+  // truncated JSON; one fresh attempt recovers most of those.
+  let text = "";
+  let model = "";
+  let raw: Record<string, unknown> | undefined;
+  let lastContractError: NoteContractError | undefined;
+  for (let attempt = 0; attempt < 2 && !raw; attempt++) {
+    ({ text, model } = await completeWithFailover({
+      system: SYSTEM_PROMPT,
+      user: userPrompt,
+      maxTokens: 4096,
+    }));
+    try {
+      raw = extractJson(text) as Record<string, unknown>;
+    } catch (err) {
+      if (err instanceof NoteContractError) {
+        lastContractError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (!raw) throw lastContractError ?? new NoteContractError("model output unusable after retry");
 
   // The model does not stamp model/generatedAt; the server owns those so they
   // can't be spoofed. Merge them onto the parsed shape before validation.
-  const raw = extractJson(text) as Record<string, unknown>;
   const candidate = {
     ...raw,
     encounterId: args.caseContext.encounter.id,
@@ -106,7 +123,11 @@ function extractJson(text: string): unknown {
   if (start === -1 || end === -1) {
     throw new NoteContractError("no JSON object found in model output");
   }
-  return JSON.parse(candidate.slice(start, end + 1));
+  try {
+    return JSON.parse(candidate.slice(start, end + 1));
+  } catch (err) {
+    throw new NoteContractError(err instanceof Error ? err.message : "unparseable model output");
+  }
 }
 
 // Build the deterministic note from chart data (+ optional transcript).
