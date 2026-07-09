@@ -37,10 +37,14 @@ export function countryFromAcceptLanguage(acceptLanguage: string | null | undefi
   return m ? m[1].toUpperCase() : null;
 }
 
+// The raw two-letter country the request appears to come from (edge header
+// first, Accept-Language hint second); null when there is no signal.
+export function detectCountry(headers: Headers): string | null {
+  const edge = headers.get("x-vercel-ip-country") ?? headers.get("cf-ipcountry");
+  if (edge && edge.trim().length === 2) return edge.trim().toUpperCase();
+  return countryFromAcceptLanguage(headers.get("accept-language"));
+}
+
 export function detectFramework(headers: Headers): GuidelineFramework {
-  const edgeCountry = headers.get("x-vercel-ip-country") ?? headers.get("cf-ipcountry");
-  const detected =
-    frameworkForCountry(edgeCountry) ??
-    frameworkForCountry(countryFromAcceptLanguage(headers.get("accept-language")));
-  return detected ?? "US";
+  return frameworkForCountry(detectCountry(headers)) ?? "US";
 }

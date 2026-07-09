@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { verifyClinicianNpi } from "@/lib/verification/npi";
+import { detectCountry, detectFramework } from "@/lib/geo";
 import { recordAudit } from "@/lib/audit";
 
 const Body = z.object({
@@ -59,12 +60,18 @@ export async function POST(req: Request) {
       verification = await verifyClinicianNpi({ npi: body.npi, fullName: body.fullName });
     }
 
+    // Seed the profile's guideline framework and country from where the
+    // clinician is signing up (Vercel edge country header). From then on the
+    // PROFILE is the source of truth — a Canadian doctor on a US conference
+    // network keeps Canadian guidelines. Editable later; geo never overrides it.
     const { error: insertError } = await admin.from("clinicians").insert({
       id: authData.user.id,
       full_name: body.fullName,
       credential: body.credential,
       npi: body.npi ?? null,
       verification_status: verification.verdict,
+      primary_framework: detectFramework(req.headers),
+      country: detectCountry(req.headers) ?? "US",
     });
 
     if (insertError) {

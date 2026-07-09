@@ -291,9 +291,11 @@ export async function EncounterView({ record, sample }: { record: CaseRecord; sa
     [{ date: encounter.occurredAt, vitals: encounter.vitals }, ...history.map((h) => ({ date: h.encounter.occurredAt, vitals: h.encounter.vitals }))],
   );
 
-  // Geo-detected default guideline framework (edge country header, then
-  // Accept-Language). Only the select's initial value — manual override stays.
-  const defaultFramework = detectFramework(await headers());
+  // Default guideline framework: the clinician's PROFILE wins (seeded from
+  // geo at signup, editable) — a Canadian doctor keeps Canadian guidelines on
+  // any network. Geo detection remains the fallback for anonymous contexts
+  // (the public sample encounter). Manual override in the select stays.
+  const defaultFramework = clinician?.primaryFramework ?? detectFramework(await headers());
 
   // Regional prescribing patterns for the detected region + chart problems —
   // cited public-dataset facts (see regional/library.ts); absent regions stay silent.
