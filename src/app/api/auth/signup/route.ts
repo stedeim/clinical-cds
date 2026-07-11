@@ -109,6 +109,19 @@ export async function POST(req: Request) {
       }
     }
 
+    // A beta code is the founder's personal vouch — codes are handed to
+    // known clinicians one by one, so the manual review happened at invite
+    // time. That clears the verification gate for the founding cohort
+    // (critically: Canadian and other non-US doctors have no NPI to verify
+    // against). A successful NPPES verification above still takes precedence
+    // as the stronger, registry-backed basis.
+    if (isBeta && verification.verdict === "pending") {
+      verification = {
+        verdict: "verified",
+        reason: "Founding-beta invite — personally vouched at invite time.",
+      };
+    }
+
     const { error: insertError } = await admin.from("clinicians").insert({
       id: authData.user.id,
       full_name: body.fullName,
