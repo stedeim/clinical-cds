@@ -346,6 +346,28 @@ export async function EncounterView({ record, sample }: { record: CaseRecord; sa
             <span style={{ fontSize: 14, color: T.body }}>{encounter.chiefComplaint}</span>
           )}
           <div style={{ flex: 1 }} />
+          {/* Quiet way to start the next encounter without leaving the visit
+              context — hidden on the public sample so anonymous visitors can't
+              trip the verified-clinician gate. */}
+          {clinician?.isVerified && (
+            <a
+              href="/cases/new"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 13px",
+                background: T.card,
+                border: `1px solid ${T.line}`,
+                borderRadius: 22,
+                font: `600 12.5px/1 ${T.sans}`,
+                color: T.accent,
+                textDecoration: "none",
+              }}
+            >
+              + New case
+            </a>
+          )}
           {/* Honest state: ambient capture isn't built — no fake live timer. */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 22, font: `600 12.5px/1 ${T.sans}`, color: T.muted }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.faint, display: "inline-block" }} />
