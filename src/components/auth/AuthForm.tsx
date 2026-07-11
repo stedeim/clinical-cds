@@ -12,6 +12,8 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [fullName, setFullName] = useState("");
   const [credential, setCredential] = useState("MD");
   const [npi, setNpi] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [licenseBody, setLicenseBody] = useState("");
   const [betaCode, setBetaCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export function AuthForm({ mode }: AuthFormProps) {
         fullName,
         credential,
         ...(mode === "signup" && npi.trim() ? { npi: npi.trim() } : {}),
+        ...(mode === "signup" && licenseNumber.trim() ? { licenseNumber: licenseNumber.trim() } : {}),
+        ...(mode === "signup" && licenseBody.trim() ? { licenseBody: licenseBody.trim() } : {}),
         ...(mode === "signup" && betaCode.trim() ? { betaCode: betaCode.trim().toUpperCase() } : {}),
       }),
     });
@@ -69,10 +73,19 @@ export function AuthForm({ mode }: AuthFormProps) {
           <Field label="Full name" value={fullName} onChange={setFullName} required />
           <Field label="Credential" value={credential} onChange={setCredential} required />
           <div>
-            <Field label="NPI (US clinicians — optional)" value={npi} onChange={setNpi} />
+            <Field label="NPI (US clinicians)" value={npi} onChange={setNpi} />
             <p className="mt-1 text-xs text-[#6b665a]">
-              10-digit NPI enables instant verification against the public NPPES registry. Without one
-              (or outside the US), your account is verified by manual review.
+              10-digit NPI enables instant verification against the public NPPES registry.
+            </p>
+          </div>
+          <div>
+            <div className="grid grid-cols-[1fr_1fr] gap-3">
+              <Field label="License / registration no." value={licenseNumber} onChange={setLicenseNumber} />
+              <Field label="Licensing body" value={licenseBody} onChange={setLicenseBody} />
+            </div>
+            <p className="mt-1 text-xs text-[#6b665a]">
+              Outside the US? Give your college or council registration (e.g. CPSO, GMC, AHPRA) —
+              we check it against the public register, usually within 1 business day.
             </p>
           </div>
           <div>

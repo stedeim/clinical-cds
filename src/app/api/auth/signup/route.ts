@@ -14,6 +14,10 @@ const Body = z.object({
   // Optional US NPI — enables instant verification against the NPPES
   // registry. Absent (or non-US) → account stays pending for manual review.
   npi: z.string().regex(/^\d{10}$/).optional(),
+  // Non-US clinicians: license/registration number + licensing body (CPSO,
+  // GMC, AHPRA, …). Reviewed by an admin against the body's public register.
+  licenseNumber: z.string().trim().max(40).optional(),
+  licenseBody: z.string().trim().max(80).optional(),
   // Optional beta invite code — single-use, grants free access (is_beta).
   // Never affects verification_status.
   betaCode: z
@@ -80,7 +84,9 @@ export async function POST(req: Request) {
       verdict: "pending",
       reason: body.npi
         ? "Verification in progress."
-        : "No NPI provided — held for manual review (non-US clinicians are reviewed manually).",
+        : body.licenseNumber
+          ? "Your registration will be checked against your licensing body's public register — usually within 1 business day."
+          : "No registration details provided — held for manual review.",
     };
     if (body.npi) {
       verification = await verifyClinicianNpi({ npi: body.npi, fullName: body.fullName });
@@ -127,6 +133,8 @@ export async function POST(req: Request) {
       full_name: body.fullName,
       credential: body.credential,
       npi: body.npi ?? null,
+      license_number: body.licenseNumber || null,
+      license_body: body.licenseBody || null,
       verification_status: verification.verdict,
       primary_framework: detectFramework(req.headers),
       country: detectCountry(req.headers) ?? "US",

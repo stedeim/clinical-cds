@@ -16,6 +16,7 @@ export interface CurrentClinician {
   // Founding-beta grant: free access in exchange for an honest review.
   // Bypasses the paywall; never affects clinical verification.
   isBeta: boolean;
+  role: "clinician" | "admin";
   // Billing cache, mirrored from Stripe by the webhook (see lib/billing).
   subscriptionStatus: DbClinician["subscription_status"];
   subscriptionPlan: DbClinician["subscription_plan"];
@@ -35,6 +36,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
         primaryFramework: "US",
         isVerified: true,
         isBeta: false,
+        role: "clinician",
         subscriptionStatus: "none",
         subscriptionPlan: null,
         currentPeriodEnd: null,
@@ -51,7 +53,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
     const { data, error } = await admin
       .from("clinicians")
       .select(
-        "id, full_name, credential, verification_status, primary_framework, is_beta, subscription_status, subscription_plan, current_period_end, stripe_customer_id",
+        "id, full_name, credential, verification_status, primary_framework, is_beta, role, subscription_status, subscription_plan, current_period_end, stripe_customer_id",
       )
       .eq("id", authUserId)
       .single();
@@ -69,6 +71,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
       primaryFramework: data.primary_framework,
       isVerified: data.verification_status === "verified",
       isBeta: data.is_beta === true,
+      role: data.role === "admin" ? "admin" : "clinician",
       subscriptionStatus: data.subscription_status ?? "none",
       subscriptionPlan: data.subscription_plan ?? null,
       currentPeriodEnd: data.current_period_end ?? null,
