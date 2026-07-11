@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import type { Problem, Medication } from "@/lib/types";
 import { ProblemsField, MedicationsField } from "@/components/intake/CodedFields";
+import { CaseIntakeSchema } from "@/lib/case-intake";
 
 const DEFAULTS = {
   patientName: "",
@@ -18,6 +20,7 @@ const DEFAULTS = {
 };
 
 export function CaseIntakeForm() {
+  const router = useRouter();
   const [form, setForm] = useState(DEFAULTS);
   // Structured entries from the ICD-10/RxTerms pickers (free text still
   // possible inside each picker) — sent as arrays, codes and doses intact.
@@ -44,30 +47,70 @@ export function CaseIntakeForm() {
       ageYears: form.ageYears ? Number(form.ageYears) : undefined,
     };
 
-    const res = await fetch("/api/cases/new", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    // Fail fast on the client with the same schema the server enforces, so
+    // "chief complaint required" never has to round-trip.
+    const parsed = CaseIntakeSchema.safeParse(body);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      const key = String(issue?.path?.[0] ?? "");
+      const label =
+        key === "chiefComplaint"
+          ? "Chief complaint is required."
+          : (issue?.message ?? "Please check the form fields.");
+      setError(label);
+      setLoading(false);
+      return;
+    }
+
+    let res: Response;
+    try {
+      res = await fetch("/api/cases/new", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      setError("Network error. Check your connection and try again.");
+      setLoading(false);
+      return;
+    }
     const data = await res.json().catch(() => ({}));
 
+    if (res.status === 401) {
+      // Session expired mid-form — bounce to login and come back here.
+      router.push("/auth/login?next=/cases/new");
+      return;
+    }
+    if (res.status === 403) {
+      // Verification pending. Explain, then send them to the dashboard where
+      // the verification banner already exists — one place, one message.
+      setError("Your clinician verification is pending. Redirecting…");
+      setLoading(false);
+      setTimeout(() => router.push("/"), 1500);
+      return;
+    }
     if (!res.ok) {
       setError(data.error ?? "Failed to create case.");
       setLoading(false);
       return;
     }
 
-    setCreatedId(data.record?.encounter?.id);
-    setForm(DEFAULTS);
-    setProblems([]);
-    setMedications([]);
+    const newId: string | undefined = data.record?.encounter?.id;
+    if (newId) {
+      // Auto-open the case rather than a "success card" middle-step —
+      // clinicians expect the encounter view immediately.
+      setCreatedId(newId);
+      router.push(`/cases/${newId}`);
+      return;
+    }
+    setError("Case saved but no id returned.");
     setLoading(false);
   }
 
   if (createdId) {
     return (
       <div className="rounded-[14px] border border-[#CFDCD2] bg-[#EEF2EE] p-5 text-sm text-[#3c5646]">
-        <p className="font-medium">Case created.</p>
+        <p className="font-medium">Case created — opening…</p>
         <a href={`/cases/${createdId}`} className="font-semibold text-clinical underline">
           Open case →
         </a>
