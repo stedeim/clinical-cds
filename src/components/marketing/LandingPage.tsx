@@ -20,7 +20,10 @@ const S = {
     marginBottom: 14,
   } as const,
   h2: {
-    font: `400 40px/1.12 ${T.serif}`,
+    fontFamily: T.serif,
+    fontWeight: 400,
+    fontSize: "clamp(30px, 4vw, 40px)",
+    lineHeight: 1.12,
     letterSpacing: "-.015em",
     margin: "0 0 14px",
     color: T.ink,
@@ -76,7 +79,7 @@ function Check({ dark }: { dark?: boolean }) {
 
 export function LandingPage() {
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "#F7F6F2", color: T.ink, fontFamily: T.sans }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(120% 90% at 50% -10%, #F7F6F2 0%, #EDECE6 70%)", color: T.ink, fontFamily: T.sans }}>
       <style>{`
         @keyframes pbPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.25;transform:scale(.65);}}
         @keyframes pbWave{0%,100%{transform:scaleY(.22);}50%{transform:scaleY(1);}}
@@ -88,6 +91,9 @@ export function LandingPage() {
         .pb-link:hover{color:#4E6B57;}
         .lp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
         .lp-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+        .lp-grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+        @media (max-width:900px){.lp-grid5{grid-template-columns:repeat(2,1fr);}}
+        @media (max-width:560px){.lp-grid5{grid-template-columns:1fr;}}
         .lp-hero{display:grid;grid-template-columns:1.08fr .92fr;gap:52px;align-items:center;}
         .lp-split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}
         @media (max-width:900px){.lp-grid3{grid-template-columns:1fr;}.lp-hero,.lp-split,.lp-grid2{grid-template-columns:1fr;gap:24px;}.lp-nav{display:none;}}
@@ -138,7 +144,7 @@ export function LandingPage() {
                 AI FOR INDEPENDENT CLINICIANS
               </span>
             </div>
-            <h1 style={{ font: `400 52px/1.06 ${T.serif}`, letterSpacing: "-.02em", margin: "0 0 22px" }}>
+            <h1 style={{ fontFamily: T.serif, fontWeight: 400, fontSize: "clamp(34px, 5vw, 52px)", lineHeight: 1.06, letterSpacing: "-.02em", margin: "0 0 22px" }}>
               The scribe that writes only what you <span style={{ fontStyle: "italic", color: T.accent }}>actually said</span> — and answers what you&rsquo;d have looked up.
             </h1>
             <p style={{ fontSize: 17, lineHeight: 1.6, color: "#5c574a", maxWidth: 520, margin: "0 0 34px" }}>
@@ -156,22 +162,25 @@ export function LandingPage() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#8b8779" }}>
               <span style={{ width: 16, height: 16, borderRadius: "50%", background: T.accentBg, color: T.accent, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 9 }}>✓</span>
-              Try the sample with no account · sign up in 2 minutes · NPI verification is instant
+              Cancel anytime during the trial — you won&rsquo;t be charged · NPI verification is instant
             </div>
           </div>
 
-          {/* brand panel (no stock footage — the sample encounter is the demo) */}
-          <div style={{ position: "relative", height: 520, borderRadius: 20, overflow: "hidden", border: "1px solid #E0DDD2", boxShadow: "0 50px 90px -55px rgba(50,42,26,.6)", background: `radial-gradient(130% 110% at 20% 0%, #EEF2EE 0%, #E4E9E2 45%, #D9E0D7 100%)` }}>
-            <div style={{ position: "absolute", left: "50%", top: "44%", transform: "translate(-50%,-50%)", width: 260, height: 260, borderRadius: "50%", background: `conic-gradient(${T.accent} 0 50%, ${T.ink} 0 100%)`, opacity: 0.92, boxShadow: "0 40px 80px -30px rgba(33,31,25,.45)" }} />
+          {/* the real product, not stock footage: the sample encounter mid
+              dose-catch, cropped straight from the live app */}
+          <a href="/sample" style={{ position: "relative", height: 520, borderRadius: 20, overflow: "hidden", border: "1px solid #E0DDD2", boxShadow: "0 50px 90px -55px rgba(50,42,26,.6)", background: "#fff", display: "block" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/hero-encounter.png" alt="Pabaid catching a 200 mg lisinopril dose against its cited 80 mg ceiling" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top left" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(33,31,25,.18) 0%, rgba(33,31,25,0) 26%, rgba(33,31,25,0) 62%, rgba(33,31,25,.44) 100%)" }} />
             <div style={{ position: "absolute", left: 22, top: 20, display: "flex", alignItems: "center", gap: 8, font: `500 11px/1 ${S.mono}`, letterSpacing: ".04em", color: "#fff", background: "rgba(33,31,25,.42)", backdropFilter: "blur(6px)", borderRadius: 20, padding: "7px 13px" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#e8875f", display: "inline-block", animation: "pbPulse 1.5s ease-in-out infinite" }} />
-              Live encounter
+              Live sample — click to try it
             </div>
-            <div style={{ position: "absolute", right: 20, bottom: 20, textAlign: "right", color: T.ink }}>
-              <div style={{ font: `500 17px/1.2 ${T.serif}` }}>In the room, hands free</div>
-              <div style={{ fontSize: 12, color: "#6b6658", marginTop: 3 }}>Eye contact, not the keyboard</div>
+            <div style={{ position: "absolute", right: 20, bottom: 20, textAlign: "right", color: "#fff", textShadow: "0 1px 10px rgba(0,0,0,.45)" }}>
+              <div style={{ font: `500 17px/1.2 ${T.serif}` }}>The dose flag, mid-catch</div>
+              <div style={{ fontSize: 12, color: "#e6e3d9", marginTop: 3 }}>Real product, synthetic patient</div>
             </div>
-          </div>
+          </a>
         </div>
       </section>
 
@@ -389,6 +398,42 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ============ BETA REVIEWS ============ */}
+      {/* Honest social proof: 20 clinicians are beta testing now; their
+          reviews land in these slots at launch. Reserved slots, never
+          fabricated quotes — and the open seats are real scarcity. */}
+      <section id="beta" style={{ ...S.wrap, padding: "8px 32px 80px" }}>
+        <div style={{ textAlign: "center", maxWidth: 620, margin: "0 auto 40px" }}>
+          <SectionLabel>THE FIRST TWENTY</SectionLabel>
+          <h2 style={S.h2}>Twenty clinicians are shaping Pabaid right now.</h2>
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: "#5c574a", margin: 0 }}>
+            Their reviews will live here, unedited, at launch. Until then these seats are
+            reserved — and a few are still open.
+          </p>
+        </div>
+        <div className="lp-grid5">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} style={{ border: "1.5px dashed #D8D4C7", borderRadius: 14, padding: "22px 18px", background: "rgba(255,255,255,.55)", display: "flex", flexDirection: "column", minHeight: 170 }}>
+              <div style={{ font: `400 30px/1 ${T.serif}`, color: "#D8D4C7" }}>&ldquo;</div>
+              <div style={{ flex: 1, fontSize: 12.5, lineHeight: 1.55, color: "#a29d92" }}>
+                Reserved for a beta clinician&rsquo;s honest review.
+              </div>
+              <div style={{ marginTop: 14, fontSize: 12, color: "#b4afa1" }}>
+                Beta clinician #{n}
+                <span style={{ display: "block", font: `400 10px ${S.mono}`, marginTop: 2 }}>review pending</span>
+              </div>
+            </div>
+          ))}
+          <a href="/auth/signup" className="pb-card" style={{ border: `1.5px solid ${T.accent}`, borderRadius: 14, padding: "22px 18px", background: T.accentBg, display: "flex", flexDirection: "column", minHeight: 170 }}>
+            <div style={{ font: `400 30px/1 ${T.serif}`, color: T.accent }}>+</div>
+            <div style={{ flex: 1, fontSize: 12.5, lineHeight: 1.55, color: "#3c5646", fontWeight: 600 }}>
+              This seat could be yours. Beta clinicians get direct input on the roadmap.
+            </div>
+            <div style={{ marginTop: 14, fontSize: 12, fontWeight: 700, color: T.accent }}>Join the beta →</div>
+          </a>
+        </div>
+      </section>
+
       {/* ============ SECURITY ============ */}
       <section id="security" style={{ background: T.ink, color: "#E6E3D9" }}>
         <div className="lp-split" style={{ ...S.wrap, padding: "76px 32px" }}>
@@ -422,8 +467,11 @@ export function LandingPage() {
         <div style={{ textAlign: "center", maxWidth: 600, margin: "0 auto 46px" }}>
           <SectionLabel>SIMPLE, PER-CLINICIAN PRICING</SectionLabel>
           <h2 style={S.h2}>Two weeks free. Upgrade when it&rsquo;s saving you hours.</h2>
+          {/* Anchor first: the market price frames ours before a card is read. */}
           <p style={{ fontSize: 16, lineHeight: 1.6, color: "#5c574a", margin: 0 }}>
-            No enterprise sales gate. Pick a plan and you&rsquo;re charting the same afternoon.
+            A scribe alone runs <b style={{ fontWeight: 600, color: T.ink }}>$79–$399</b> per
+            clinician per month. Pabaid is the scribe, the reference, and the safety net —
+            together:
           </p>
         </div>
         <div className="lp-grid2" style={{ maxWidth: 760, margin: "0 auto" }}>
@@ -445,6 +493,9 @@ export function LandingPage() {
             <a href="/auth/signup" className="pb-btn" style={{ marginTop: "auto", textAlign: "center", fontSize: 14.5, fontWeight: 600, color: T.ink, background: "#fff", border: `1px solid ${T.ink}`, borderRadius: 11, padding: 13, display: "block" }}>
               Try it for free for 14 days
             </a>
+            <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "#8b8779" }}>
+              Cancel anytime during the trial — you won&rsquo;t be charged.
+            </div>
           </div>
           <div className="pb-card" style={{ background: T.ink, border: `1px solid ${T.ink}`, borderRadius: 18, padding: "30px 28px", color: "#F5F4EF", display: "flex", flexDirection: "column", position: "relative" }}>
             <div style={{ position: "absolute", top: 20, right: 22, font: `500 10px/1 ${S.mono}`, color: T.ink, background: "#C9D8CD", borderRadius: 20, padding: "5px 11px", letterSpacing: ".04em" }}>BEST VALUE</div>
@@ -465,10 +516,10 @@ export function LandingPage() {
             <a href="/auth/signup" className="pb-btn" style={{ marginTop: "auto", textAlign: "center", fontSize: 14.5, fontWeight: 600, color: T.ink, background: "#F5F4EF", borderRadius: 11, padding: 13, display: "block" }}>
               Try it for free for 14 days
             </a>
+            <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "#a29d92" }}>
+              Cancel anytime during the trial — you won&rsquo;t be charged.
+            </div>
           </div>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: "#8b8779" }}>
-          Comparable scribes alone run $79–$399 per clinician per month. Pabaid includes the reference engine and the safety net.
         </div>
       </section>
 
@@ -479,7 +530,8 @@ export function LandingPage() {
             Chart less. Look up nothing. <span style={{ fontStyle: "italic", color: T.accent }}>See more patients.</span>
           </h2>
           <p style={{ fontSize: 17, lineHeight: 1.6, color: "#4a5347", maxWidth: 520, margin: "0 auto 30px" }}>
-            Try the sample encounter right now, no account needed — then bring Pabaid to your next clinic day.
+            Tonight&rsquo;s charting doesn&rsquo;t have to follow you home. Try the sample
+            encounter right now, no account needed — then bring Pabaid to your next clinic day.
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/auth/signup" className="pb-btn" style={{ ...S.darkBtn, fontSize: 16, borderRadius: 12, padding: "15px 30px", boxShadow: "0 16px 34px -16px rgba(33,31,25,.6)" }}>

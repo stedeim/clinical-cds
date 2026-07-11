@@ -22,7 +22,7 @@ export default function SamplePage() {
           href="/auth/signup"
           className="rounded-[10px] bg-clinical px-4 py-[9px] text-[13px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(78,107,87,.55)]"
         >
-          Create your clinician account →
+          Try it for free for 14 days →
         </a>
       </div>
       <EncounterView record={sampleCase} sample />
