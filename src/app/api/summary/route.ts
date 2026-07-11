@@ -22,7 +22,7 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = rateLimit(`summary:${clientIp(req)}`, { limit: 20, windowMs: 60_000 });
+  const rl = await rateLimit(`summary:${clientIp(req)}`, { max: 20, windowMs: 60_000, label: "summary" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment." },

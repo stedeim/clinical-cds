@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   // Brake on credential brute force / stuffing. 10 attempts/min per address.
-  const rl = rateLimit(`login:${clientIp(req)}`, { limit: 10, windowMs: 60_000 });
+  const rl = await rateLimit(`login:${clientIp(req)}`, { max: 10, windowMs: 60_000, label: "login" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many sign-in attempts. Please wait a moment." },

@@ -20,7 +20,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   // Account creation is not something a human does 6 times a minute.
-  const rl = rateLimit(`signup:${clientIp(req)}`, { limit: 5, windowMs: 600_000 });
+  const rl = await rateLimit(`signup:${clientIp(req)}`, { max: 5, windowMs: 600_000, label: "signup" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many sign-up attempts. Please wait a few minutes." },

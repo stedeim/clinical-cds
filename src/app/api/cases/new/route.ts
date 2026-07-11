@@ -10,7 +10,7 @@ import { recordAudit } from "@/lib/audit";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const rl = rateLimit(`cases:${clientIp(req)}`, { limit: 20, windowMs: 60_000 });
+  const rl = await rateLimit(`cases:${clientIp(req)}`, { max: 20, windowMs: 60_000, label: "cases" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment." },

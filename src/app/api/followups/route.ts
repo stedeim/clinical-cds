@@ -30,7 +30,7 @@ async function authedClinician(): Promise<{ id: string }> {
 }
 
 export async function POST(req: Request) {
-  const rl = rateLimit(`followups:${clientIp(req)}`, { limit: 30, windowMs: 60_000 });
+  const rl = await rateLimit(`followups:${clientIp(req)}`, { max: 30, windowMs: 60_000, label: "followups" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment." },
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const rl = rateLimit(`followups:${clientIp(req)}`, { limit: 30, windowMs: 60_000 });
+  const rl = await rateLimit(`followups:${clientIp(req)}`, { max: 30, windowMs: 60_000, label: "followups" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment." },

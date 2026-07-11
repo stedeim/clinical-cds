@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
 export async function POST(req: Request) {
-  const rl = rateLimit(`historydoc:${clientIp(req)}`, { limit: 10, windowMs: 60_000 });
+  const rl = await rateLimit(`historydoc:${clientIp(req)}`, { max: 10, windowMs: 60_000, label: "historydoc" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many uploads. Please wait a moment." },
