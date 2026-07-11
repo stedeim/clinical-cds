@@ -169,7 +169,6 @@ export function LandingPage() {
           {/* the real product, not stock footage: the sample encounter mid
               dose-catch, cropped straight from the live app */}
           <a href="/sample" style={{ position: "relative", height: 520, borderRadius: 20, overflow: "hidden", border: "1px solid #E0DDD2", boxShadow: "0 50px 90px -55px rgba(50,42,26,.6)", background: "#fff", display: "block" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/hero-encounter.png" alt="Pabaid catching a 200 mg lisinopril dose against its cited 80 mg ceiling" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top left" }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(33,31,25,.18) 0%, rgba(33,31,25,0) 26%, rgba(33,31,25,0) 62%, rgba(33,31,25,.44) 100%)" }} />
             <div style={{ position: "absolute", left: 22, top: 20, display: "flex", alignItems: "center", gap: 8, font: `500 11px/1 ${S.mono}`, letterSpacing: ".04em", color: "#fff", background: "rgba(33,31,25,.42)", backdropFilter: "blur(6px)", borderRadius: 20, padding: "7px 13px" }}>
