@@ -549,6 +549,9 @@ export async function EncounterView({ record, sample }: { record: CaseRecord; sa
               medications={encounter.medications}
               clinicianName={clinician?.fullName}
               clinicianCredential={clinician?.credential}
+              // Medical transcription for signed-in clinicians when the key
+              // exists; the public sample keeps the free browser engine.
+              deepgramEnabled={!sample && !!process.env.DEEPGRAM_API_KEY}
             />
             {!sample && (
               <FollowUpCard

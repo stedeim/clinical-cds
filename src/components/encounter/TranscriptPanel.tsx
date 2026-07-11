@@ -23,6 +23,7 @@ export function TranscriptInput({
   onGround,
   onSummarize,
   error,
+  deepgramEnabled = false,
 }: {
   text: string;
   onText: (v: string) => void;
@@ -31,6 +32,7 @@ export function TranscriptInput({
   onGround: () => void;
   onSummarize: () => void;
   error: string | null;
+  deepgramEnabled?: boolean;
 }) {
   return (
     <div style={{ marginBottom: 16, padding: "12px 13px", background: T.panelBg, border: `1px solid ${T.line}`, borderRadius: 12 }}>
@@ -42,7 +44,10 @@ export function TranscriptInput({
       </div>
       {/* Voice dictation appends finalized DR:/PT: lines to the same textarea
           the paste flow uses — one pipeline into the grounding engine. */}
-      <Dictation onSegment={(line) => onText((text ? text.replace(/\n?$/, "\n") : "") + line)} />
+      <Dictation
+        deepgramEnabled={deepgramEnabled}
+        onSegment={(line) => onText((text ? text.replace(/\n?$/, "\n") : "") + line)}
+      />
       <textarea
         value={text}
         onChange={(e) => onText(e.target.value)}

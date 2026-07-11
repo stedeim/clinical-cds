@@ -38,6 +38,7 @@ export function NoteCard({
   medications,
   clinicianName,
   clinicianCredential,
+  deepgramEnabled = false,
 }: {
   encounterId: string;
   initialNote: GeneratedNote;
@@ -46,6 +47,7 @@ export function NoteCard({
   medications: Medication[];
   clinicianName?: string;
   clinicianCredential?: string;
+  deepgramEnabled?: boolean;
 }) {
   const [note, setNote] = useState<GeneratedNote>(initialNote);
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
@@ -269,6 +271,7 @@ export function NoteCard({
 
       {open && !grounded && (
         <TranscriptInput
+          deepgramEnabled={deepgramEnabled}
           text={text}
           onText={setText}
           loading={loading}
