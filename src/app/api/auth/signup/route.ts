@@ -14,6 +14,14 @@ const Body = z.object({
   // Optional US NPI — enables instant verification against the NPPES
   // registry. Absent (or non-US) → account stays pending for manual review.
   npi: z.string().regex(/^\d{10}$/).optional(),
+  // Optional beta invite code — single-use, grants free access (is_beta).
+  // Never affects verification_status.
+  betaCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^PABAID-[A-Z2-9]{5}$/)
+    .optional(),
 });
 
 export const runtime = "nodejs";
@@ -37,6 +45,24 @@ export async function POST(req: Request) {
 
   try {
     const admin = createServiceClient();
+
+    // Validate the beta code BEFORE creating anything: a bad code should be
+    // a clean form error, not a half-created account. Single-use is enforced
+    // by the conditional update at redemption below.
+    if (body.betaCode) {
+      const { data: codeRow } = await admin
+        .from("beta_codes")
+        .select("code, redeemed_by")
+        .eq("code", body.betaCode)
+        .maybeSingle();
+      if (!codeRow) {
+        return NextResponse.json({ error: "That beta code isn't valid." }, { status: 400 });
+      }
+      if (codeRow.redeemed_by) {
+        return NextResponse.json({ error: "That beta code has already been used." }, { status: 400 });
+      }
+    }
+
     const { data: authData, error: signUpError } = await admin.auth.admin.createUser({
       email: body.email,
       password: body.password,
@@ -64,6 +90,25 @@ export async function POST(req: Request) {
     // clinician is signing up (Vercel edge country header). From then on the
     // PROFILE is the source of truth — a Canadian doctor on a US conference
     // network keeps Canadian guidelines. Editable later; geo never overrides it.
+    // Redeem the beta code atomically: the update only lands if the code is
+    // still unredeemed (two racers → one wins, the other gets is_beta=false
+    // and a clear error). Redeemed BEFORE the clinician insert so the roster
+    // row can reference the auth user id either way.
+    let isBeta = false;
+    if (body.betaCode) {
+      const { data: redeemed } = await admin
+        .from("beta_codes")
+        .update({ redeemed_by: authData.user.id, redeemed_at: new Date().toISOString() })
+        .eq("code", body.betaCode)
+        .is("redeemed_by", null)
+        .select("code");
+      isBeta = (redeemed?.length ?? 0) > 0;
+      if (!isBeta) {
+        await admin.auth.admin.deleteUser(authData.user.id);
+        return NextResponse.json({ error: "That beta code has already been used." }, { status: 400 });
+      }
+    }
+
     const { error: insertError } = await admin.from("clinicians").insert({
       id: authData.user.id,
       full_name: body.fullName,
@@ -72,6 +117,7 @@ export async function POST(req: Request) {
       verification_status: verification.verdict,
       primary_framework: detectFramework(req.headers),
       country: detectCountry(req.headers) ?? "US",
+      is_beta: isBeta,
     });
 
     if (insertError) {

@@ -13,6 +13,9 @@ export interface CurrentClinician {
   verificationStatus: DbClinician["verification_status"];
   primaryFramework: DbClinician["primary_framework"];
   isVerified: boolean;
+  // Founding-beta grant: free access in exchange for an honest review.
+  // Bypasses the (future) paywall; never affects clinical verification.
+  isBeta: boolean;
 }
 
 export async function getCurrentClinician(authUserId?: string): Promise<CurrentClinician | null> {
@@ -26,6 +29,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
         verificationStatus: "verified",
         primaryFramework: "US",
         isVerified: true,
+        isBeta: false,
       };
     }
     return null;
@@ -37,7 +41,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
     const admin = createServiceClient();
     const { data, error } = await admin
       .from("clinicians")
-      .select("id, full_name, credential, verification_status, primary_framework")
+      .select("id, full_name, credential, verification_status, primary_framework, is_beta")
       .eq("id", authUserId)
       .single();
 
@@ -53,6 +57,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
       verificationStatus: data.verification_status,
       primaryFramework: data.primary_framework,
       isVerified: data.verification_status === "verified",
+      isBeta: (data as { is_beta?: boolean }).is_beta === true,
     };
   } catch (err) {
     if (err instanceof MissingSupabaseConfigError) {

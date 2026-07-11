@@ -15,6 +15,7 @@ export interface DbClinician {
   npi: string | null;
   verification_status: VerificationStatus;
   primary_framework: GuidelineFramework;
+  is_beta: boolean;
   role: ClinicianRole;
   created_at: string;
 }

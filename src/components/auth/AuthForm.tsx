@@ -12,6 +12,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [fullName, setFullName] = useState("");
   const [credential, setCredential] = useState("MD");
   const [npi, setNpi] = useState("");
+  const [betaCode, setBetaCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         fullName,
         credential,
         ...(mode === "signup" && npi.trim() ? { npi: npi.trim() } : {}),
+        ...(mode === "signup" && betaCode.trim() ? { betaCode: betaCode.trim().toUpperCase() } : {}),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -71,6 +73,12 @@ export function AuthForm({ mode }: AuthFormProps) {
             <p className="mt-1 text-xs text-[#6b665a]">
               10-digit NPI enables instant verification against the public NPPES registry. Without one
               (or outside the US), your account is verified by manual review.
+            </p>
+          </div>
+          <div>
+            <Field label="Beta invite code (optional)" value={betaCode} onChange={setBetaCode} />
+            <p className="mt-1 text-xs text-[#6b665a]">
+              Founding-beta clinicians use Pabaid free in exchange for an honest review.
             </p>
           </div>
         </>
