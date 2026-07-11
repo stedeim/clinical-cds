@@ -87,6 +87,22 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ response, model });
   } catch (err) {
+    // Audit the failed access AFTER auth has passed: clinicianId is a real
+    // verified id, and a compliance trail wants to know when the engine
+    // errored for a signed-in user. Sample-mode has no audit row (no PHI).
+    if (!isSample) {
+      await recordAudit({
+        clinicianId,
+        action: "cds_query",
+        encounterId: body.encounterId,
+        detail: {
+          outcome: "error",
+          errorType: err instanceof CdsContractError ? "contract" : "internal",
+          framework: body.framework ?? "US",
+          questionLength: body.question.length,
+        },
+      }).catch(() => {});
+    }
     if (err instanceof CdsContractError) {
       return NextResponse.json(
         { error: "The assistant returned an unusable response. Please retry." },

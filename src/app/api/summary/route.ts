@@ -80,6 +80,19 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ summary, transcript: segments });
   } catch (err) {
+    // Audit failed post-auth invocations too — same rationale as /api/query.
+    if (!isSample) {
+      await recordAudit({
+        clinicianId,
+        action: "summary_generate",
+        encounterId: body.encounterId,
+        detail: {
+          outcome: "error",
+          errorType: err instanceof SummaryContractError ? "contract" : "internal",
+          transcriptSegments: segments.length,
+        },
+      }).catch(() => {});
+    }
     if (err instanceof SummaryContractError) {
       return NextResponse.json(
         { error: "The summary engine returned an unusable response. Please retry." },

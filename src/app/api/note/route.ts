@@ -87,6 +87,19 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ note, transcript });
   } catch (err) {
+    // Audit failed post-auth invocations too — same rationale as /api/query.
+    if (!isSample) {
+      await recordAudit({
+        clinicianId,
+        action: "note_generate",
+        encounterId: body.encounterId,
+        detail: {
+          outcome: "error",
+          errorType: err instanceof NoteContractError ? "contract" : "internal",
+          transcriptSegments: transcript.length,
+        },
+      }).catch(() => {});
+    }
     if (err instanceof NoteContractError) {
       return NextResponse.json(
         { error: "The note engine returned an unusable response. Please retry." },
