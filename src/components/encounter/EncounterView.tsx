@@ -265,7 +265,10 @@ export async function EncounterView({ record, sample }: { record: CaseRecord; sa
   const clinician = await getCurrentClinician(await currentUserIdFromCookies());
 
   // Uploaded history documents for this patient (stub store until Supabase).
-  const historyDocs = listDocuments(patient.id, clinician?.id ?? "demo-clinician").map((d) => ({
+  // If the clinician row is missing (e.g. Supabase-configured but signup race),
+  // skip the read rather than falling back to a literal owner id — a hardcoded
+  // `?? "demo-clinician"` here would silently cross the tenant boundary.
+  const historyDocs = (clinician ? listDocuments(patient.id, clinician.id) : []).map((d) => ({
     id: d.id,
     filename: d.filename,
     format: d.format,
