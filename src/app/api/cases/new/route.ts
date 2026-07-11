@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveCase } from "@/lib/store";
 import { CaseIntakeSchema, caseFromIntake } from "@/lib/case-intake";
-import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { recordPrescribingEvents } from "@/lib/regional/record";
 import { detectFramework } from "@/lib/geo";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   let user: { id: string };
   try {
     const userId = await currentUserIdFromCookies();
-    user = await requireVerifiedClinician(userId);
+    user = await requireEntitledClinician(userId);
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: err.message }, { status: err.status });

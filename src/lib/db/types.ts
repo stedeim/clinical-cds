@@ -16,6 +16,11 @@ export interface DbClinician {
   verification_status: VerificationStatus;
   primary_framework: GuidelineFramework;
   is_beta: boolean;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_status: "none" | "trialing" | "active" | "past_due" | "canceled";
+  subscription_plan: "solo" | "clinic" | null;
+  current_period_end: string | null;
   role: ClinicianRole;
   created_at: string;
 }

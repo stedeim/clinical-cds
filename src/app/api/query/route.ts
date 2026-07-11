@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getCase } from "@/lib/store";
 import { runCdsQuery, CdsContractError } from "@/lib/cds/engine";
 import { recordAudit } from "@/lib/audit";
-import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 import { FRAMEWORK_IDS } from "@/lib/guidelines";
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
   if (!isSample) {
     try {
       const userId = await currentUserIdFromCookies();
-      const clinician = await requireVerifiedClinician(userId);
+      const clinician = await requireEntitledClinician(userId);
       clinicianId = clinician.id;
     } catch (err) {
       if (err instanceof AuthError) {

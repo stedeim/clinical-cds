@@ -4,7 +4,7 @@ import { getCase } from "@/lib/store";
 import { parseTranscript } from "@/lib/note/transcript";
 import { summarizeTranscript, SummaryContractError } from "@/lib/summary/engine";
 import { recordAudit } from "@/lib/audit";
-import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
   if (!isSample) {
     try {
       const userId = await currentUserIdFromCookies();
-      clinicianId = (await requireVerifiedClinician(userId)).id;
+      clinicianId = (await requireEntitledClinician(userId)).id;
     } catch (err) {
       if (err instanceof AuthError) {
         return NextResponse.json({ error: err.message }, { status: err.status });

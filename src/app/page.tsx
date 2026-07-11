@@ -1,6 +1,7 @@
 import { listCases } from "@/lib/store";
 import { getServerUser } from "@/lib/server-user";
 import { getCurrentClinician } from "@/lib/clinician";
+import { hasActiveAccess, isBillingConfigured } from "@/lib/billing/stripe";
 import { listOpenFollowUps } from "@/lib/followup/store";
 import { dueStatus } from "@/lib/followup/due";
 import { FollowUpDashboard, type DashboardItem } from "@/components/followup/FollowUpDashboard";
@@ -73,6 +74,18 @@ export default async function HomePage() {
 
       {/* Verification pending is a waiting room, not a dead end: say so, and
           give the doctor something real to do meanwhile. */}
+      {/* Verified but not yet subscribed (and not beta): the trial is the
+          next step, said plainly. */}
+      {clinician && clinician.isVerified && isBillingConfigured() && !hasActiveAccess(clinician) && (
+        <a
+          href="/billing"
+          className="block rounded-xl border border-[#CFDCD2] bg-[#EEF2EE] px-4 py-3 text-[13.5px] leading-snug text-[#3c5646]"
+        >
+          <b className="font-semibold">You&rsquo;re verified.</b> Start your 14-day free trial
+          to create cases — cancel anytime during the trial and you won&rsquo;t be charged. →
+        </a>
+      )}
+
       {clinician && !clinician.isVerified && (
         <div className="rounded-xl border border-[#D9B85E] bg-[#F6EACB] px-4 py-3 text-[13.5px] leading-snug text-caution">
           <b className="font-semibold">Verification pending.</b> CDS output unlocks when your

@@ -14,8 +14,13 @@ export interface CurrentClinician {
   primaryFramework: DbClinician["primary_framework"];
   isVerified: boolean;
   // Founding-beta grant: free access in exchange for an honest review.
-  // Bypasses the (future) paywall; never affects clinical verification.
+  // Bypasses the paywall; never affects clinical verification.
   isBeta: boolean;
+  // Billing cache, mirrored from Stripe by the webhook (see lib/billing).
+  subscriptionStatus: DbClinician["subscription_status"];
+  subscriptionPlan: DbClinician["subscription_plan"];
+  currentPeriodEnd: string | null;
+  stripeCustomerId: string | null;
 }
 
 export async function getCurrentClinician(authUserId?: string): Promise<CurrentClinician | null> {
@@ -30,6 +35,10 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
         primaryFramework: "US",
         isVerified: true,
         isBeta: false,
+        subscriptionStatus: "none",
+        subscriptionPlan: null,
+        currentPeriodEnd: null,
+        stripeCustomerId: null,
       };
     }
     return null;
@@ -41,7 +50,9 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
     const admin = createServiceClient();
     const { data, error } = await admin
       .from("clinicians")
-      .select("id, full_name, credential, verification_status, primary_framework, is_beta")
+      .select(
+        "id, full_name, credential, verification_status, primary_framework, is_beta, subscription_status, subscription_plan, current_period_end, stripe_customer_id",
+      )
       .eq("id", authUserId)
       .single();
 
@@ -57,7 +68,11 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
       verificationStatus: data.verification_status,
       primaryFramework: data.primary_framework,
       isVerified: data.verification_status === "verified",
-      isBeta: (data as { is_beta?: boolean }).is_beta === true,
+      isBeta: data.is_beta === true,
+      subscriptionStatus: data.subscription_status ?? "none",
+      subscriptionPlan: data.subscription_plan ?? null,
+      currentPeriodEnd: data.current_period_end ?? null,
+      stripeCustomerId: data.stripe_customer_id ?? null,
     };
   } catch (err) {
     if (err instanceof MissingSupabaseConfigError) {
@@ -76,6 +91,20 @@ export async function requireVerifiedClinician(authUserId?: string): Promise<Cur
   }
   if (!clinician.isVerified) {
     throw new AuthError("Clinician account is not verified.", 403);
+  }
+  return clinician;
+}
+
+// Verified AND entitled: the gate for everything that creates PHI or spends
+// LLM tokens. Entitlement = founding beta, a live (trialing/active)
+// subscription, or billing not being configured at all (dev/stub/CI — the
+// paywall only exists where Stripe does). 402 signals the paywall to the
+// client, distinct from the 403 verification gate.
+export async function requireEntitledClinician(authUserId?: string): Promise<CurrentClinician> {
+  const clinician = await requireVerifiedClinician(authUserId);
+  const { hasActiveAccess } = await import("@/lib/billing/stripe");
+  if (!hasActiveAccess(clinician)) {
+    throw new AuthError("An active subscription (or trial) is required.", 402);
   }
   return clinician;
 }

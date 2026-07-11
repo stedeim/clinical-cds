@@ -81,6 +81,12 @@ export function CaseIntakeForm() {
       router.push("/auth/login?next=/cases/new");
       return;
     }
+    if (res.status === 402) {
+      // Paywall: verified but no live trial/subscription — billing page has
+      // the two plans and the trial CTA.
+      router.push("/billing");
+      return;
+    }
     if (res.status === 403) {
       // Verification pending. Explain, then send them to the dashboard where
       // the verification banner already exists — one place, one message.

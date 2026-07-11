@@ -5,7 +5,7 @@ import { createFollowUp, listFollowUps, getFollowUp, setFollowUpStatus } from "@
 import { dispatchReminder } from "@/lib/followup/dispatch";
 import { getCase } from "@/lib/store";
 import { recordAudit } from "@/lib/audit";
-import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 // Follow-up reminders endpoint. Same posture as the other PHI routes: verified
@@ -26,7 +26,7 @@ const Body = z.discriminatedUnion("op", [
 
 async function authedClinician(): Promise<{ id: string }> {
   const userId = await currentUserIdFromCookies();
-  return requireVerifiedClinician(userId);
+  return requireEntitledClinician(userId);
 }
 
 export async function POST(req: Request) {

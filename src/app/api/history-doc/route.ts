@@ -3,7 +3,7 @@ import { getCase } from "@/lib/store";
 import { detectFormat, extractText } from "@/lib/history/extract";
 import { createDocument, listDocuments } from "@/lib/history/store";
 import { recordAudit } from "@/lib/audit";
-import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
+import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 // Patient-history document upload. Same PHI posture as every other route:
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   let clinicianId: string;
   try {
-    clinicianId = (await requireVerifiedClinician(await currentUserIdFromCookies())).id;
+    clinicianId = (await requireEntitledClinician(await currentUserIdFromCookies())).id;
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   let clinicianId: string;
   try {
-    clinicianId = (await requireVerifiedClinician(await currentUserIdFromCookies())).id;
+    clinicianId = (await requireEntitledClinician(await currentUserIdFromCookies())).id;
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
