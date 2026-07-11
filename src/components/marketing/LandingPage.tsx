@@ -124,7 +124,7 @@ export function LandingPage() {
             Sign in
           </a>
           <a href="/auth/signup" className="pb-btn" style={{ fontSize: 13.5, fontWeight: 600, color: "#F7F6F2", background: T.ink, borderRadius: 9, padding: "9px 17px", whiteSpace: "nowrap" }}>
-            Start free trial
+            Try it for free
           </a>
         </div>
       </header>
@@ -148,7 +148,7 @@ export function LandingPage() {
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 16 }}>
               <a href="/auth/signup" className="pb-btn" style={{ ...S.darkBtn, boxShadow: "0 14px 30px -14px rgba(33,31,25,.55)" }}>
-                Start your 14-day free trial
+                Try it for free for 14 days
               </a>
               <a href="/sample" className="pb-btn" style={S.ghostBtn}>
                 Explore a sample encounter
@@ -443,7 +443,7 @@ export function LandingPage() {
               ))}
             </ul>
             <a href="/auth/signup" className="pb-btn" style={{ marginTop: "auto", textAlign: "center", fontSize: 14.5, fontWeight: 600, color: T.ink, background: "#fff", border: `1px solid ${T.ink}`, borderRadius: 11, padding: 13, display: "block" }}>
-              Start 14-day free trial
+              Try it for free for 14 days
             </a>
           </div>
           <div className="pb-card" style={{ background: T.ink, border: `1px solid ${T.ink}`, borderRadius: 18, padding: "30px 28px", color: "#F5F4EF", display: "flex", flexDirection: "column", position: "relative" }}>
@@ -463,7 +463,7 @@ export function LandingPage() {
               ))}
             </ul>
             <a href="/auth/signup" className="pb-btn" style={{ marginTop: "auto", textAlign: "center", fontSize: 14.5, fontWeight: 600, color: T.ink, background: "#F5F4EF", borderRadius: 11, padding: 13, display: "block" }}>
-              Start 14-day free trial
+              Try it for free for 14 days
             </a>
           </div>
         </div>
@@ -483,7 +483,7 @@ export function LandingPage() {
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/auth/signup" className="pb-btn" style={{ ...S.darkBtn, fontSize: 16, borderRadius: 12, padding: "15px 30px", boxShadow: "0 16px 34px -16px rgba(33,31,25,.6)" }}>
-              Start 14-day free trial
+              Try it for free for 14 days
             </a>
             <a href="/sample" className="pb-btn" style={{ ...S.ghostBtn, fontSize: 16, borderRadius: 12, padding: "15px 28px" }}>
               Explore the sample
