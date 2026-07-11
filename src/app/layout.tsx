@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Newsreader, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthNav } from "@/components/auth/AuthNav";
+import { getServerUser } from "@/lib/server-user";
 
 const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif" });
 const sans = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-sans" });
@@ -17,10 +18,14 @@ export const metadata: Metadata = {
     "Encounter-native, explainable clinical decision support for independent clinicians.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Signed-out surfaces (landing page, auth, sample) carry their own chrome;
+  // the app header belongs to the signed-in workspace.
+  const user = await getServerUser();
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
       <body>
+        {user && (
         <header className="border-b border-[#E6E4DB] bg-white/60">
           <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-3">
             <a
@@ -42,7 +47,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1280px] px-6 py-8">{children}</main>
+        )}
+        <main className={user ? "mx-auto max-w-[1280px] px-6 py-8" : undefined}>{children}</main>
       </body>
     </html>
   );

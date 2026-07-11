@@ -5,15 +5,17 @@ import { listOpenFollowUps } from "@/lib/followup/store";
 import { dueStatus } from "@/lib/followup/due";
 import { FollowUpDashboard, type DashboardItem } from "@/components/followup/FollowUpDashboard";
 import { CaseList, type CaseRow } from "@/components/cases/CaseList";
+import { LandingPage } from "@/components/marketing/LandingPage";
 import type { Problem } from "@/lib/types";
 
 // Case list — entry point. Server Component: reads the data layer on the server.
 export default async function HomePage() {
   const user = await getServerUser();
-  // Signed-out visitors get the sample-case start block, never a crash:
-  // listCases requires a clinician id once Supabase is configured.
-  const cases = user ? await listCases(user.id) : [];
-  const clinician = user ? await getCurrentClinician(user.id) : null;
+  // Signed-out visitors get the marketing landing page; the case dashboard
+  // is the signed-in home. (listCases requires a clinician id in Supabase mode.)
+  if (!user) return <LandingPage />;
+  const cases = await listCases(user.id);
+  const clinician = await getCurrentClinician(user.id);
 
   // "Good morning, Dr. Chen" — the v2 design's greeting. Server-local time is
   // an approximation, so the phrasing degrades gracefully around midnight.
@@ -108,12 +110,10 @@ export default async function HomePage() {
             <span className="shrink-0 text-[14px] font-semibold text-clinical">Explore →</span>
           </a>
           <a
-            href={user ? "/cases/new" : "/auth/login"}
+            href="/cases/new"
             className="block rounded-[14px] border-2 border-dashed border-[#CFDCD2] px-4 py-[18px] text-center text-[14px] font-semibold text-[#3c5646]"
           >
-            {user
-              ? "+ Create your first case — three quick steps"
-              : "Sign in to create your first case"}
+            + Create your first case — three quick steps
           </a>
         </div>
       ) : (

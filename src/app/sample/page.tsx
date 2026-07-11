@@ -11,7 +11,7 @@ export const metadata = { title: "Sample encounter — Pabaid" };
 export default function SamplePage() {
   return (
     <div>
-      <div className="mx-auto mb-1 flex max-w-[1240px] flex-wrap items-center gap-3 rounded-xl border border-[#CFDCD2] bg-[#EEF2EE] px-4 py-3">
+      <div className="mx-auto mb-1 mt-5 flex max-w-[1240px] px-4 flex-wrap items-center gap-3 rounded-xl border border-[#CFDCD2] bg-[#EEF2EE] px-4 py-3">
         <p className="min-w-[260px] flex-1 text-[13.5px] leading-snug text-[#3c5646]">
           <b className="font-semibold">This is a sample encounter — synthetic patient, fully
           interactive.</b>{" "}

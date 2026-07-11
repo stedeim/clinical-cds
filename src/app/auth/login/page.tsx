@@ -2,7 +2,7 @@ import { AuthForm } from "@/components/auth/AuthForm";
 
 export default function LoginPage() {
   return (
-    <div className="mx-auto max-w-sm space-y-5">
+    <div className="mx-auto max-w-sm space-y-5 px-6 py-14">
       <div className="space-y-6 rounded-2xl bg-white p-6 shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)]">
         <div>
           <h1 className="font-serif text-xl font-semibold text-ink">Sign in</h1>
