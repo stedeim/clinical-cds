@@ -20,7 +20,8 @@ export interface AuditEvent {
     | "followup_create"
     | "reminder_send"
     | "history_doc_upload"
-    | "allergy_add";
+    | "allergy_add"
+    | "case_create";
   encounterId?: string;
   queryId?: string;
   detail?: Record<string, unknown>;

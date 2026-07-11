@@ -5,6 +5,7 @@ import { requireVerifiedClinician, AuthError, currentUserIdFromCookies } from "@
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { recordPrescribingEvents } from "@/lib/regional/record";
 import { detectFramework } from "@/lib/geo";
+import { recordAudit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
@@ -46,6 +47,14 @@ export async function POST(req: Request) {
   try {
     const caseContext = caseFromIntake(parsed.data, user.id);
     const record = await saveCase(caseContext, user.id);
+
+    // Append-only audit row: who created a case, when, and which encounter it
+    // links to. No PHI beyond the encounter id (matches the /api/query pattern).
+    void recordAudit({
+      clinicianId: user.id,
+      action: "case_create",
+      encounterId: record.encounter.id,
+    }).catch(() => {});
 
     // Fire-and-forget: de-identified prescribing events for the regional
     // peer-stats loop (no-op in stub mode; never blocks or fails the request).
