@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { verifyClinicianNpi } from "@/lib/verification/npi";
 import { detectCountry, detectFramework } from "@/lib/geo";
 import { recordAudit } from "@/lib/audit";
+
+// Hashed email token for the per-email signup bucket. Keeps the raw
+// address out of Redis keys — the bucket only needs a stable identifier.
+function emailKey(email: string): string {
+  return createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 32);
+}
 
 const Body = z.object({
   email: z.string().email(),
@@ -31,12 +38,17 @@ const Body = z.object({
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  // Account creation is not something a human does 6 times a minute.
-  const rl = await rateLimit(`signup:${clientIp(req)}`, { max: 5, windowMs: 600_000, label: "signup" });
-  if (!rl.ok) {
+  // Per-IP brake first: 5 attempts / 10 min. Real humans don't sign up this
+  // often; stuffing scripts do.
+  const ipRl = await rateLimit(`signup:${clientIp(req)}`, {
+    max: 5,
+    windowMs: 600_000,
+    label: "signup",
+  });
+  if (!ipRl.ok) {
     return NextResponse.json(
-      { error: "Too many sign-up attempts. Please wait a few minutes." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+      { error: "rate_limit_exceeded", retryAfter: ipRl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(ipRl.retryAfterSec) } },
     );
   }
 
@@ -45,6 +57,20 @@ export async function POST(req: Request) {
     body = Body.parse(await req.json());
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  // Per-email brake: 3 signup attempts per email per hour. IP-rotation
+  // stuffing can't cycle attempts against the same target address.
+  const emailRl = await rateLimit(`signup-email:${emailKey(body.email)}`, {
+    max: 3,
+    windowMs: 3_600_000,
+    label: "signup-email",
+  });
+  if (!emailRl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: emailRl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(emailRl.retryAfterSec) } },
+    );
   }
 
   try {

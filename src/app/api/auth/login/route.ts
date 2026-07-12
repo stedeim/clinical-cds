@@ -11,11 +11,13 @@ const Body = z.object({
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  // Brake on credential brute force / stuffing. 10 attempts/min per address.
-  const rl = await rateLimit(`login:${clientIp(req)}`, { max: 10, windowMs: 60_000, label: "login" });
+  // Brake on credential brute force / stuffing. Tighter than the compute
+  // routes: 5 attempts / 10 min per IP is enough headroom for a legitimate
+  // user retrying a typo, and far below what a stuffing script needs.
+  const rl = await rateLimit(`login:${clientIp(req)}`, { max: 5, windowMs: 600_000, label: "login" });
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "Too many sign-in attempts. Please wait a moment." },
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
       { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
     );
   }
