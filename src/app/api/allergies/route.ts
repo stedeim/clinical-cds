@@ -4,7 +4,7 @@ import { getCase } from "@/lib/store";
 import { addAllergy } from "@/lib/memory-store";
 import { recordAudit } from "@/lib/audit";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { composedRateLimit } from "@/lib/rate-limit";
 
 // Clinician-confirmed allergy addition — the confirm half of the document
 // scan. Only a signed-in, verified clinician's explicit click lands here;
@@ -20,14 +20,6 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = await rateLimit(`allergies:${clientIp(req)}`, { max: 30, windowMs: 60_000, label: "allergies" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());
@@ -43,6 +35,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
     return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
+  }
+
+  const rl = await composedRateLimit(req, {
+    userIdentifier: clinicianId,
+    userConfig: { max: 30, windowMs: 60_000, label: "allergies" },
+    ipConfig: { max: 60, windowMs: 60_000, label: "allergies" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   const record = await getCase(body.encounterId, clinicianId);

@@ -5,7 +5,7 @@ import { parseTranscript } from "@/lib/note/transcript";
 import { summarizeTranscript, SummaryContractError } from "@/lib/summary/engine";
 import { recordAudit } from "@/lib/audit";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { composedRateLimit } from "@/lib/rate-limit";
 import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 
 // Transcript-summary endpoint — the "cut the fluff" button. Same PHI posture
@@ -22,14 +22,6 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = await rateLimit(`summary:${clientIp(req)}`, { max: 20, windowMs: 60_000, label: "summary" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());
@@ -52,6 +44,18 @@ export async function POST(req: Request) {
       console.error("[summary] auth error", err);
       return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
     }
+  }
+
+  const rl = await composedRateLimit(req, {
+    userIdentifier: isSample ? undefined : clinicianId,
+    userConfig: isSample ? undefined : { max: 60, windowMs: 60_000, label: "summary" },
+    ipConfig: { max: 30, windowMs: 60_000, label: "summary" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   const record = await getCase(body.encounterId, clinicianId);

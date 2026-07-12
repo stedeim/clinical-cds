@@ -4,7 +4,7 @@ import { detectFormat, extractText } from "@/lib/history/extract";
 import { createDocument, listDocuments } from "@/lib/history/store";
 import { recordAudit } from "@/lib/audit";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { composedRateLimit } from "@/lib/rate-limit";
 
 // Patient-history document upload. Same PHI posture as every other route:
 // verified clinician, encounter ownership checked before anything is read or
@@ -17,14 +17,6 @@ export const runtime = "nodejs";
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
 export async function POST(req: Request) {
-  const rl = await rateLimit(`historydoc:${clientIp(req)}`, { max: 10, windowMs: 60_000, label: "historydoc" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many uploads. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   let clinicianId: string;
   try {
     clinicianId = (await requireEntitledClinician(await currentUserIdFromCookies())).id;
@@ -34,6 +26,19 @@ export async function POST(req: Request) {
     }
     console.error("[history-doc] auth error", err);
     return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
+  }
+
+  // Uploads are heavy — tighter per-user cap than other intake routes.
+  const rl = await composedRateLimit(req, {
+    userIdentifier: clinicianId,
+    userConfig: { max: 30, windowMs: 60_000, label: "historydoc" },
+    ipConfig: { max: 20, windowMs: 60_000, label: "historydoc" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   let form: FormData;

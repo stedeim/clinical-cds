@@ -4,7 +4,7 @@ import { getCase } from "@/lib/store";
 import { runCdsQuery, CdsContractError } from "@/lib/cds/engine";
 import { recordAudit } from "@/lib/audit";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { composedRateLimit } from "@/lib/rate-limit";
 import { SAMPLE_ENCOUNTER_ID } from "@/lib/sample-case";
 import { FRAMEWORK_IDS } from "@/lib/guidelines";
 import type { GuidelineFramework } from "@/lib/types";
@@ -28,14 +28,6 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = await rateLimit(`query:${clientIp(req)}`, { max: 30, windowMs: 60_000, label: "query" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());
@@ -60,6 +52,21 @@ export async function POST(req: Request) {
       console.error("[cds_query] auth error", err);
       return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
     }
+  }
+
+  // Per-user + per-IP composite: signed-in clinicians get their own bucket
+  // (60/min); unauth sample-visitor path stays per-IP only. Whichever bucket
+  // exhausts first wins.
+  const rl = await composedRateLimit(req, {
+    userIdentifier: isSample ? undefined : clinicianId,
+    userConfig: isSample ? undefined : { max: 60, windowMs: 60_000, label: "query" },
+    ipConfig: { max: 30, windowMs: 60_000, label: "query" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   const record = await getCase(body.encounterId, clinicianId);

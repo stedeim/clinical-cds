@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { saveCase } from "@/lib/store";
 import { CaseIntakeSchema, caseFromIntake } from "@/lib/case-intake";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { composedRateLimit } from "@/lib/rate-limit";
 import { recordPrescribingEvents } from "@/lib/regional/record";
 import { detectFramework } from "@/lib/geo";
 import { recordAudit } from "@/lib/audit";
@@ -10,14 +10,6 @@ import { recordAudit } from "@/lib/audit";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const rl = await rateLimit(`cases:${clientIp(req)}`, { max: 20, windowMs: 60_000, label: "cases" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   // Case intake stores PHI — same verified-clinician gate as /api/note and
   // /api/query (previously any authenticated user could create cases).
   let user: { id: string };
@@ -30,6 +22,18 @@ export async function POST(req: Request) {
     }
     console.error("[cases/new] auth error", err);
     return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
+  }
+
+  const rl = await composedRateLimit(req, {
+    userIdentifier: user.id,
+    userConfig: { max: 30, windowMs: 60_000, label: "cases" },
+    ipConfig: { max: 60, windowMs: 60_000, label: "cases" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   let body: unknown;

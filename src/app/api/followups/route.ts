@@ -6,7 +6,7 @@ import { dispatchReminder } from "@/lib/followup/dispatch";
 import { getCase } from "@/lib/store";
 import { recordAudit } from "@/lib/audit";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { composedRateLimit } from "@/lib/rate-limit";
 
 // Follow-up reminders endpoint. Same posture as the other PHI routes: verified
 // clinician required, rate-limited, encounter ownership checked before any
@@ -30,14 +30,6 @@ async function authedClinician(): Promise<{ id: string }> {
 }
 
 export async function POST(req: Request) {
-  const rl = await rateLimit(`followups:${clientIp(req)}`, { max: 30, windowMs: 60_000, label: "followups" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   let body: z.infer<typeof Body>;
   try {
     body = Body.parse(await req.json());
@@ -54,6 +46,18 @@ export async function POST(req: Request) {
     }
     console.error("[followups] auth error", err);
     return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
+  }
+
+  const rl = await composedRateLimit(req, {
+    userIdentifier: clinicianId,
+    userConfig: { max: 30, windowMs: 60_000, label: "followups" },
+    ipConfig: { max: 60, windowMs: 60_000, label: "followups" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   if (body.op === "create") {
@@ -101,14 +105,6 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const rl = await rateLimit(`followups:${clientIp(req)}`, { max: 30, windowMs: 60_000, label: "followups" });
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
   let clinicianId: string;
   try {
     clinicianId = (await authedClinician()).id;
@@ -118,6 +114,18 @@ export async function GET(req: Request) {
     }
     console.error("[followups] auth error", err);
     return NextResponse.json({ error: "Authentication failed." }, { status: 401 });
+  }
+
+  const rl = await composedRateLimit(req, {
+    userIdentifier: clinicianId,
+    userConfig: { max: 60, windowMs: 60_000, label: "followups" },
+    ipConfig: { max: 90, windowMs: 60_000, label: "followups" },
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: rl.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   const encounterId = new URL(req.url).searchParams.get("encounterId");
