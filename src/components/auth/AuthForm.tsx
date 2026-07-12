@@ -4,9 +4,10 @@ import { useState, FormEvent } from "react";
 
 interface AuthFormProps {
   mode: "login" | "signup";
+  initialCode?: string;
 }
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, initialCode }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -14,7 +15,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [npi, setNpi] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseBody, setLicenseBody] = useState("");
-  const [betaCode, setBetaCode] = useState("");
+  const [betaCode, setBetaCode] = useState((initialCode ?? "").toUpperCase());
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

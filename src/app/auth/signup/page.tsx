@@ -1,17 +1,25 @@
 import { AuthForm } from "@/components/auth/AuthForm";
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
+  // A founding code carried from /beta prefills the beta field, so the invited
+  // clinician doesn't retype it.
+  const { code } = await searchParams;
   return (
     <div className="mx-auto max-w-sm space-y-5 px-6 py-14">
       <div className="space-y-6 rounded-2xl bg-white p-6 shadow-[0_6px_22px_-14px_rgba(50,42,26,.35)]">
         <div>
           <h1 className="font-serif text-xl font-semibold text-ink">Create clinician account</h1>
           <p className="mt-1 text-sm text-[#6b665a]">
-            Verification against the NPPES registry unlocks CDS output — usually instant with
-            an NPI.
+            {code
+              ? "Your founding code is applied — you'll be verified and in, free during beta."
+              : "Verification against the NPPES registry unlocks CDS output — usually instant with an NPI."}
           </p>
         </div>
-        <AuthForm mode="signup" />
+        <AuthForm mode="signup" initialCode={code} />
         <p className="text-center text-sm text-[#6b665a]">
           Already have an account?{" "}
           <a href="/auth/login" className="text-clinical underline">
