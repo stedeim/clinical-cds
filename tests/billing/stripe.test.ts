@@ -1,11 +1,23 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { hasActiveAccess, subscriptionToRow, isBillingConfigured } from "@/lib/billing/stripe";
+import {
+  hasActiveAccess,
+  subscriptionToRow,
+  isBillingConfigured,
+  isAnnualConfigured,
+  priceIdForPlan,
+} from "@/lib/billing/stripe";
 
 // The access rule and the webhook mapping are the billing system's brain;
 // both are pure, so they get exhaustive coverage here. Checkout/portal/
 // webhook plumbing is exercised against Stripe test mode instead.
 
-const ENV_KEYS = ["STRIPE_SECRET_KEY", "STRIPE_PRICE_SOLO", "STRIPE_PRICE_CLINIC"] as const;
+const ENV_KEYS = [
+  "STRIPE_SECRET_KEY",
+  "STRIPE_PRICE_SOLO",
+  "STRIPE_PRICE_CLINIC",
+  "STRIPE_PRICE_SOLO_ANNUAL",
+  "STRIPE_PRICE_CLINIC_ANNUAL",
+] as const;
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -13,6 +25,8 @@ beforeEach(() => {
   process.env.STRIPE_SECRET_KEY = "sk_test_x";
   process.env.STRIPE_PRICE_SOLO = "price_solo_x";
   process.env.STRIPE_PRICE_CLINIC = "price_clinic_x";
+  process.env.STRIPE_PRICE_SOLO_ANNUAL = "price_solo_annual_x";
+  process.env.STRIPE_PRICE_CLINIC_ANNUAL = "price_clinic_annual_x";
 });
 afterEach(() => {
   for (const k of ENV_KEYS) {
@@ -42,6 +56,32 @@ describe("hasActiveAccess", () => {
     delete process.env.STRIPE_SECRET_KEY;
     expect(isBillingConfigured()).toBe(false);
     expect(hasActiveAccess({ isBeta: false, subscriptionStatus: "none" })).toBe(true);
+  });
+});
+
+describe("priceIdForPlan + annual", () => {
+  it("maps plan × interval to the right price id", () => {
+    expect(priceIdForPlan("solo", "month")).toBe("price_solo_x");
+    expect(priceIdForPlan("solo", "year")).toBe("price_solo_annual_x");
+    expect(priceIdForPlan("clinic", "month")).toBe("price_clinic_x");
+    expect(priceIdForPlan("clinic", "year")).toBe("price_clinic_annual_x");
+    expect(priceIdForPlan("solo")).toBe("price_solo_x"); // defaults to monthly
+  });
+
+  it("reports annual availability from env", () => {
+    expect(isAnnualConfigured()).toBe(true);
+    delete process.env.STRIPE_PRICE_SOLO_ANNUAL;
+    expect(isAnnualConfigured()).toBe(false);
+  });
+
+  it("maps an ANNUAL price back to its plan in the webhook mapping", () => {
+    const row = subscriptionToRow({
+      id: "sub_y",
+      status: "active",
+      items: { data: [{ price: { id: "price_clinic_annual_x" } }] },
+      current_period_end: 1_800_000_000,
+    });
+    expect(row.subscription_plan).toBe("clinic");
   });
 });
 

@@ -21,6 +21,15 @@ export function isBillingConfigured(): boolean {
   );
 }
 
+// Annual prices are optional — monthly billing works with or without them.
+// The billing page only offers the monthly/annual toggle when both annual
+// prices are configured.
+export function isAnnualConfigured(): boolean {
+  return !!(process.env.STRIPE_PRICE_SOLO_ANNUAL && process.env.STRIPE_PRICE_CLINIC_ANNUAL);
+}
+
+export type Interval = "month" | "year";
+
 let stripeClient: Stripe | null = null;
 export function getStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -32,10 +41,29 @@ export function getStripe(): Stripe {
 
 export type Plan = "solo" | "clinic";
 
-export function priceIdForPlan(plan: Plan): string {
-  const id = plan === "solo" ? process.env.STRIPE_PRICE_SOLO : process.env.STRIPE_PRICE_CLINIC;
-  if (!id) throw new Error(`Stripe price for plan "${plan}" is not configured.`);
-  return id;
+export function priceIdForPlan(plan: Plan, interval: Interval = "month"): string {
+  const key =
+    interval === "year"
+      ? plan === "solo"
+        ? process.env.STRIPE_PRICE_SOLO_ANNUAL
+        : process.env.STRIPE_PRICE_CLINIC_ANNUAL
+      : plan === "solo"
+        ? process.env.STRIPE_PRICE_SOLO
+        : process.env.STRIPE_PRICE_CLINIC;
+  if (!key) throw new Error(`Stripe price for plan "${plan}" (${interval}) is not configured.`);
+  return key;
+}
+
+// All known price ids → plan, for the webhook's reverse mapping.
+function planForPriceId(priceId: string | undefined): Plan | null {
+  if (!priceId) return null;
+  if (priceId === process.env.STRIPE_PRICE_SOLO || priceId === process.env.STRIPE_PRICE_SOLO_ANNUAL) {
+    return "solo";
+  }
+  if (priceId === process.env.STRIPE_PRICE_CLINIC || priceId === process.env.STRIPE_PRICE_CLINIC_ANNUAL) {
+    return "clinic";
+  }
+  return null;
 }
 
 // The ONE access rule, used by every gated route and page:
@@ -61,13 +89,7 @@ export function subscriptionToRow(sub: {
   subscription_plan: Plan | null;
   current_period_end: string | null;
 } {
-  const priceId = sub.items.data[0]?.price.id;
-  const plan: Plan | null =
-    priceId === process.env.STRIPE_PRICE_SOLO
-      ? "solo"
-      : priceId === process.env.STRIPE_PRICE_CLINIC
-        ? "clinic"
-        : null;
+  const plan = planForPriceId(sub.items.data[0]?.price.id);
 
   // Collapse Stripe's many states onto our enum. incomplete/unpaid/paused →
   // no access ("canceled" bucket) — fail closed, the portal can revive them.

@@ -12,7 +12,10 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
-const Body = z.object({ plan: z.enum(["solo", "clinic"]) });
+const Body = z.object({
+  plan: z.enum(["solo", "clinic"]),
+  interval: z.enum(["month", "year"]).default("month"),
+});
 
 export async function POST(req: Request) {
   const rl = await rateLimit(`checkout:${clientIp(req)}`, { max: 10, windowMs: 600_000, label: "checkout" });
@@ -59,10 +62,10 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      line_items: [{ price: priceIdForPlan(body.plan), quantity: 1 }],
+      line_items: [{ price: priceIdForPlan(body.plan, body.interval), quantity: 1 }],
       subscription_data: {
         trial_period_days: 14,
-        metadata: { clinician_id: clinician.id, plan: body.plan },
+        metadata: { clinician_id: clinician.id, plan: body.plan, interval: body.interval },
       },
       // Card up front (the decided trial shape); cancelable in the portal.
       payment_method_collection: "always",

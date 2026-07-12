@@ -5,7 +5,17 @@ import { useState } from "react";
 // Client island for billing actions: start a checkout for a plan, or open
 // the Stripe portal. Both endpoints return a URL we hand the browser to.
 
-export function StartTrialButton({ plan, label, dark }: { plan: "solo" | "clinic"; label: string; dark?: boolean }) {
+export function StartTrialButton({
+  plan,
+  label,
+  dark,
+  interval = "month",
+}: {
+  plan: "solo" | "clinic";
+  label: string;
+  dark?: boolean;
+  interval?: "month" | "year";
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +26,7 @@ export function StartTrialButton({ plan, label, dark }: { plan: "solo" | "clinic
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, interval }),
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? "Could not start checkout.");
