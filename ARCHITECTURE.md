@@ -93,13 +93,30 @@ are framework-agnostic.
 
 ---
 
-## 5. What is NOT built yet (next slices)
+## 5. Rate limiting
+
+`src/lib/rate-limit.ts` is a two-mode adapter: when
+`UPSTASH_REDIS_REST_URL` / `_TOKEN` are set it enforces sliding windows
+via Upstash Redis (shared across every serverless instance); otherwise
+it falls back to per-process in-memory fixed-window buckets so local dev
+and the test suite keep working with zero infra. PHI routes use a
+composite key — a per-clinician bucket **and** a per-IP bucket run
+together, and whichever exhausts first returns a 429 with the
+standardized `{ error: "rate_limit_exceeded", retryAfter }` envelope
+plus a `Retry-After` header. Auth routes layer a per-IP brake with a
+per-email brake on signup (email is sha256-hashed before use as a
+bucket key) so IP-rotating stuffing can't cycle attempts against the
+same target address.
+
+---
+
+## 6. What is NOT built yet (next slices)
 
 - Real Supabase auth + the verified-clinician gate (currently a `demo-clinician`
   stub) and the NPI/license verification stub calling a real registry.
 - Supabase-backed `store.ts` and `audit.ts` implementations (seams are in place).
 - Case **intake/edit form** writing to the DB (slice seeds one demo case).
-- Billing (free vs Pro tiers), rate limiting, and the public REST API contract
-  doc for EHR partners.
+- Billing (free vs Pro tiers) and the public REST API contract doc for EHR
+  partners.
 - Eval harness for the CDS prompt (red-team for directive leakage, scope breaches,
   citation hallucination).
