@@ -1,6 +1,12 @@
+import { redirect } from "next/navigation";
+import { getServerUser } from "@/lib/server-user";
 import { CaseIntakeForm } from "@/components/cases/CaseIntakeForm";
 
-export default function NewCasePage() {
+export default async function NewCasePage() {
+  // Don't let an anonymous visitor fill a whole form only to bounce at
+  // submit — send them to sign in first, and bring them back after.
+  const user = await getServerUser();
+  if (!user) redirect("/auth/login?next=/cases/new");
   return (
     <div className="mx-auto max-w-[720px]">
       <p className="mb-5 text-xs text-[#6b665a]">

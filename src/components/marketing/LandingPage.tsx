@@ -383,7 +383,7 @@ export function LandingPage() {
       <section style={{ ...S.wrap, padding: "72px 32px" }}>
         <div className="lp-grid3" style={{ gap: 0, border: "1px solid #E6E4DB", borderRadius: 16, overflow: "hidden", background: "#fff" }}>
           <div style={{ padding: "36px 32px", borderRight: "1px solid #EEEDE6" }}>
-            <div style={{ font: `400 52px/1 ${T.serif}`, color: T.accent, marginBottom: 8 }}>~11&nbsp;s</div>
+            <div style={{ font: `400 52px/1 ${T.serif}`, color: T.accent, marginBottom: 8 }}>&lt;30&nbsp;s</div>
             <div style={{ fontSize: 14, color: "#5c574a", lineHeight: 1.5 }}>from question to cited answer, measured on the live product</div>
           </div>
           <div style={{ padding: "36px 32px", borderRight: "1px solid #EEEDE6" }}>

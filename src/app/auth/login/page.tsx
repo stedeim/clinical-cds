@@ -16,6 +16,10 @@ export default function LoginPage() {
           <a href="/auth/signup" className="text-clinical underline">
             Sign up
           </a>
+          {" · "}
+          <a href="/auth/reset" className="text-clinical underline">
+            Forgot password?
+          </a>
         </p>
       </div>
       {/* Value before the wall: the full product on a synthetic patient. */}
