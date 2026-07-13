@@ -18,6 +18,8 @@ const Body = z.object({
   password: z.string().min(8),
   fullName: z.string().min(1),
   credential: z.string().min(1),
+  // Clinic/practice name — the letterhead on exported visit notes.
+  clinicName: z.string().trim().max(120).optional(),
   // Optional US NPI — enables instant verification against the NPPES
   // registry. Absent (or non-US) → account stays pending for manual review.
   npi: z.string().regex(/^\d{10}$/).optional(),
@@ -158,6 +160,7 @@ export async function POST(req: Request) {
       id: authData.user.id,
       full_name: body.fullName,
       credential: body.credential,
+      clinic_name: body.clinicName || null,
       npi: body.npi ?? null,
       license_number: body.licenseNumber || null,
       license_body: body.licenseBody || null,

@@ -34,6 +34,10 @@ export interface SerializeOptions {
   // Post-signature amendments. A signed note is never edited — it is amended;
   // addenda print AFTER the attestation, each with its own timestamp.
   addenda?: { text: string; at: string }[];
+  // Letterhead for the exported document: the clinic name (or the clinician's
+  // own name as fallback). The note is the doctor's document — no product
+  // branding and no model name appear on it.
+  letterhead?: string;
 }
 
 const SECTION_ORDER = ["subjective", "objective", "assessment", "plan"] as const;
@@ -56,9 +60,9 @@ export function serializeNote(note: GeneratedNote, opts: SerializeOptions = {}):
   const examLines = (opts.examLines ?? []).map((l) => l.trim()).filter(Boolean);
   const out: string[] = [];
 
-  out.push("PABAID VISIT NOTE");
+  out.push(opts.letterhead ? `${opts.letterhead.toUpperCase()} — VISIT NOTE` : "VISIT NOTE");
   out.push(`Encounter: ${note.encounterId}`);
-  out.push(`Generated: ${note.generatedAt} · ${note.model}`);
+  out.push(`Generated: ${note.generatedAt}`);
   if (note.transcriptId) out.push("Grounded in a pasted visit transcript.");
   out.push("");
 

@@ -24,6 +24,13 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// "2026-07-13T19:52:04.969Z" → "2026-07-13 19:52 UTC" — a clinic document
+// wants a readable timestamp, not machine ISO. Non-ISO input passes through.
+function formatGeneratedAt(iso: string): string {
+  const m = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  return m ? `${m[1]} ${m[2]}${iso.endsWith("Z") ? " UTC" : ""}` : iso;
+}
+
 const SECTION_ORDER = ["subjective", "objective", "assessment", "plan"] as const;
 const HEADING_LABEL: Record<(typeof SECTION_ORDER)[number], string> = {
   subjective: "Subjective",
@@ -117,8 +124,8 @@ export function buildPrintHtml(note: GeneratedNote, opts: SerializeOptions = {})
 <body>
 ${watermark}
 <header>
-  <h1>Pabaid — Visit Note</h1>
-  <p>Encounter ${escapeHtml(note.encounterId)} · generated ${escapeHtml(note.generatedAt)} · ${escapeHtml(note.model)}${note.transcriptId ? " · transcript-grounded" : ""}</p>
+  <h1>${escapeHtml(opts.letterhead ? `${opts.letterhead} — Visit Note` : "Visit Note")}</h1>
+  <p>Encounter ${escapeHtml(note.encounterId)} · generated ${escapeHtml(formatGeneratedAt(note.generatedAt))}</p>
 </header>
 ${sections}
 ${cautions}

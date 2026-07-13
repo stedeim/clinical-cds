@@ -49,6 +49,21 @@ describe("escapeHtml", () => {
 });
 
 describe("buildPrintHtml", () => {
+  it("is the doctor's document: clinic letterhead, readable date, no product or model branding", () => {
+    const html = buildPrintHtml(makeNote(), { letterhead: "Willow Creek Family Practice" });
+    expect(html).toContain("Willow Creek Family Practice — Visit Note");
+    expect(html).not.toContain("Pabaid");
+    expect(html).not.toContain("mock"); // the model name never appears
+    // ISO timestamp is humanized on the printed page.
+    expect(html).not.toMatch(/generated [^<]*T[^<]*Z/);
+  });
+
+  it("falls back to a plain Visit Note heading without a letterhead", () => {
+    const html = buildPrintHtml(makeNote());
+    expect(html).toContain("<h1>Visit Note</h1>");
+    expect(html).not.toContain("Pabaid");
+  });
+
   it("watermarks an unsigned note as DRAFT and keeps the inferred marker", () => {
     const html = buildPrintHtml(makeNote());
     expect(html).toContain('class="watermark">DRAFT');

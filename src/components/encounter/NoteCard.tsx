@@ -38,6 +38,7 @@ export function NoteCard({
   medications,
   clinicianName,
   clinicianCredential,
+  clinicName,
   deepgramEnabled = false,
 }: {
   encounterId: string;
@@ -47,6 +48,7 @@ export function NoteCard({
   medications: Medication[];
   clinicianName?: string;
   clinicianCredential?: string;
+  clinicName?: string;
   deepgramEnabled?: boolean;
 }) {
   const [note, setNote] = useState<GeneratedNote>(initialNote);
@@ -147,8 +149,14 @@ export function NoteCard({
     ? { clinicianName: clinicianName ?? "Clinician", credential: clinicianCredential, signedAt }
     : null;
 
+  // Letterhead on exported documents: the clinic's name, falling back to the
+  // clinician's own. The note is the doctor's document, never Pabaid's.
+  const letterhead =
+    clinicName ||
+    (clinicianName ? `${clinicianName}${clinicianCredential ? ", " + clinicianCredential : ""}` : undefined);
+
   function buildExportText(): string {
-    return serializeNote(note, { examLines, signature, doseFindings, doseDecisions, addenda });
+    return serializeNote(note, { examLines, signature, doseFindings, doseDecisions, addenda, letterhead });
   }
 
   async function copyNote() {
@@ -180,7 +188,7 @@ export function NoteCard({
       setError("Pop-up blocked — allow pop-ups to print.");
       return;
     }
-    w.document.write(buildPrintHtml(note, { examLines, signature, doseFindings, doseDecisions, addenda }));
+    w.document.write(buildPrintHtml(note, { examLines, signature, doseFindings, doseDecisions, addenda, letterhead }));
     w.document.close();
     w.focus();
     w.print();

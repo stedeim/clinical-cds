@@ -37,12 +37,20 @@ function makeNote(overrides: Partial<GeneratedNote> = {}): GeneratedNote {
 describe("serializeNote", () => {
   it("renders all four SOAP headings and the encounter header", () => {
     const out = serializeNote(makeNote());
-    expect(out).toContain("PABAID VISIT NOTE");
+    expect(out).toContain("VISIT NOTE");
     expect(out).toContain("Encounter: demo-encounter-1");
     expect(out).toContain("SUBJECTIVE");
     expect(out).toContain("OBJECTIVE");
     expect(out).toContain("ASSESSMENT");
     expect(out).toContain("PLAN");
+  });
+
+  it("is the doctor's document: clinic letterhead, no product or model branding", () => {
+    const out = serializeNote(makeNote(), { letterhead: "Willow Creek Family Practice" });
+    expect(out).toContain("WILLOW CREEK FAMILY PRACTICE — VISIT NOTE");
+    expect(out).not.toContain("Pabaid");
+    expect(out).not.toContain("PABAID");
+    expect(out).not.toContain("mock"); // the model name never appears
   });
 
   it("marks an inferred span with the confirm-me marker", () => {

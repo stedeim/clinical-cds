@@ -10,6 +10,8 @@ export interface CurrentClinician {
   id: string;
   fullName: string;
   credential: string;
+  // Clinic/practice letterhead for exported notes; null when not provided.
+  clinicName: string | null;
   verificationStatus: DbClinician["verification_status"];
   primaryFramework: DbClinician["primary_framework"];
   isVerified: boolean;
@@ -32,6 +34,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
         id: authUserId,
         fullName: "Demo Clinician",
         credential: "MD",
+        clinicName: null,
         verificationStatus: "verified",
         primaryFramework: "US",
         isVerified: true,
@@ -53,7 +56,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
     const { data, error } = await admin
       .from("clinicians")
       .select(
-        "id, full_name, credential, verification_status, primary_framework, is_beta, role, subscription_status, subscription_plan, current_period_end, stripe_customer_id",
+        "id, full_name, credential, clinic_name, verification_status, primary_framework, is_beta, role, subscription_status, subscription_plan, current_period_end, stripe_customer_id",
       )
       .eq("id", authUserId)
       .single();
@@ -67,6 +70,7 @@ export async function getCurrentClinician(authUserId?: string): Promise<CurrentC
       id: data.id,
       fullName: data.full_name,
       credential: data.credential,
+      clinicName: data.clinic_name ?? null,
       verificationStatus: data.verification_status,
       primaryFramework: data.primary_framework,
       isVerified: data.verification_status === "verified",

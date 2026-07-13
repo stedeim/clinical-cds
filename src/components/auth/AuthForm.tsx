@@ -12,6 +12,7 @@ export function AuthForm({ mode, initialCode }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [credential, setCredential] = useState("MD");
+  const [clinicName, setClinicName] = useState("");
   const [npi, setNpi] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseBody, setLicenseBody] = useState("");
@@ -34,6 +35,7 @@ export function AuthForm({ mode, initialCode }: AuthFormProps) {
         password,
         fullName,
         credential,
+        ...(mode === "signup" && clinicName.trim() ? { clinicName: clinicName.trim() } : {}),
         ...(mode === "signup" && npi.trim() ? { npi: npi.trim() } : {}),
         ...(mode === "signup" && licenseNumber.trim() ? { licenseNumber: licenseNumber.trim() } : {}),
         ...(mode === "signup" && licenseBody.trim() ? { licenseBody: licenseBody.trim() } : {}),
@@ -73,6 +75,12 @@ export function AuthForm({ mode, initialCode }: AuthFormProps) {
         <>
           <Field label="Full name" value={fullName} onChange={setFullName} required />
           <Field label="Credential" value={credential} onChange={setCredential} required />
+          <div>
+            <Field label="Clinic / practice name" value={clinicName} onChange={setClinicName} />
+            <p className="mt-1 text-xs text-[#6b665a]">
+              Appears as the letterhead on your exported visit notes.
+            </p>
+          </div>
           <div>
             <Field label="NPI (US clinicians)" value={npi} onChange={setNpi} />
             <p className="mt-1 text-xs text-[#6b665a]">

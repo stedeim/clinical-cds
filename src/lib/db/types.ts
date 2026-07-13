@@ -10,6 +10,9 @@ export interface DbClinician {
   id: string;
   full_name: string;
   credential: string;
+  // Clinic/practice name entered at onboarding — the letterhead on exported
+  // visit notes.
+  clinic_name: string | null;
   specialty: string | null;
   country: string;
   npi: string | null;
