@@ -11,10 +11,11 @@ import { recordAudit } from "../audit";
 // "sent", and its result says plainly that no real message left the system.
 // It never fabricates delivery.
 //
-// Note what real sending additionally requires (all deliberately absent
-// today): patient contact info + consent (patients are pseudonymized by
-// design), an assistant contact on the clinician profile, and a BAA-covered
-// provider. Adding those is a data-model + vendor decision, not a code seam.
+// email-channel.ts implements the first real channel (Paubox, env-gated):
+// clinician-recipient reminders deliver to the clinician's login email.
+// Patient/assistant delivery still requires what's deliberately absent from
+// the data model: patient contact info + consent (patients are pseudonymized
+// by design) and an assistant contact on the clinician profile.
 
 export interface ReminderDispatch {
   followUp: FollowUp;

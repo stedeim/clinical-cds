@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { FollowUpCreate } from "@/lib/followup/schema";
 import { createFollowUp, listFollowUps, getFollowUp, setFollowUpStatus } from "@/lib/followup/store";
-import { dispatchReminder } from "@/lib/followup/dispatch";
+import { dispatchReminder, stubChannel } from "@/lib/followup/dispatch";
+import { emailConfigured, emailChannel } from "@/lib/followup/email-channel";
+import { createServiceClient } from "@/lib/supabase/server";
 import { getCase } from "@/lib/store";
 import { recordAudit } from "@/lib/audit";
 import { requireEntitledClinician, AuthError, currentUserIdFromCookies } from "@/lib/clinician";
@@ -93,7 +95,20 @@ export async function POST(req: Request) {
   if (!followUp) {
     return NextResponse.json({ error: "Follow-up not found." }, { status: 404 });
   }
-  const dispatch = await dispatchReminder(followUp);
+  // With Paubox configured, clinician-recipient reminders really send (to the
+  // clinician's login email). Any lookup failure falls back to the honest
+  // stub rather than failing the request.
+  let channel = stubChannel;
+  if (emailConfigured()) {
+    try {
+      const admin = createServiceClient();
+      const { data } = await admin.auth.admin.getUserById(clinicianId);
+      if (data.user?.email) channel = emailChannel(data.user.email);
+    } catch (err) {
+      console.error("[followups] email lookup failed; using stub channel", err);
+    }
+  }
+  const dispatch = await dispatchReminder(followUp, channel);
   return NextResponse.json({
     dispatch: {
       recipients: dispatch.recipients,
