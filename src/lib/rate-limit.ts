@@ -81,7 +81,11 @@ function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (url && token) {
-    cachedRedis = new Redis({ url, token });
+    // One quick retry only. The default (5 retries, exponential backoff)
+    // would stall every request for seconds whenever Redis blips — the
+    // in-memory fallback in rateLimit() is the resilience path, so fail fast
+    // into it instead.
+    cachedRedis = new Redis({ url, token, retry: { retries: 1, backoff: () => 100 } });
   }
   redisResolved = true;
   return cachedRedis;
